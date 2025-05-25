@@ -1,38 +1,7 @@
-# Welcome to your Lovable project
-
-## Project info
-
-**URL**: https://lovable.dev/projects/f7ae1e33-29a2-4e7e-8abf-26ba5ce1fb77
-
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/f7ae1e33-29a2-4e7e-8abf-26ba5ce1fb77) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
+# Step 1: Install the necessary dependencies.
 npm i
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Step 2: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
 
@@ -62,12 +31,23 @@ This project is built with:
 
 ## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/f7ae1e33-29a2-4e7e-8abf-26ba5ce1fb77) and click on Share -> Publish.
+### Deploy to Firebase
 
-## Can I connect a custom domain to my Lovable project?
+This project is configured for deployment to Firebase Hosting. Follow these steps to deploy:
 
-Yes it is!
+1. **Set up Firebase Configuration**:
+   - Copy `.env.example` to `.env`
+   - Fill in the Firebase configuration values from your Firebase console
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+2. **Build the project**:
+   ```sh
+   npm run build
+   ```
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+3. **Deploy to Firebase**:
+   ```sh
+   firebase deploy
+   ```
+
+After deployment, your app will be available at `https://rentvsbuy-d0ca5.web.app` and `https://rentvsbuy-d0ca5.firebaseapp.com`.
+
