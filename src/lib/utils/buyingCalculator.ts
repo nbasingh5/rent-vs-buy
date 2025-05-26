@@ -73,27 +73,28 @@ export const calculateBuyingYearlyData = ({
     });
   }
 
-  buyingResults.push({
-    year: 0,
-    mortgagePayment: 0,
-    principalPaid: downPaymentAmount,
-    interestPaid: 0,
-    loanBalance,
-    propertyTaxes: 0,
-    homeInsurance: 0,
-    maintenanceCosts: 0,
-    homeValue: initialHomeValue,
-    homeEquity: downPaymentAmount,
-    totalWealthBuying: downPaymentAmount + initialInvestment,
-    yearlyIncome: currentYearlyIncome,
-    yearlySavings: 0,
-    investmentsWithEarnings: initialInvestment,
-    initialInvestment,
-    amountInvested: initialInvestment,
-    investmentEarnings: 0,
-    monthlyData: monthlyBuyingData[0],
-    capitalGainsTaxPaid: 0,
-  });
+    buyingResults.push({
+      year: 0,
+      mortgagePayment: 0,
+      principalPaid: downPaymentAmount,
+      interestPaid: 0,
+      loanBalance,
+      propertyTaxes: 0,
+      homeInsurance: 0,
+      maintenanceCosts: 0,
+      monthlyExpenses: (general.monthlyExpenses || 0) * 12, // Annual total of monthly expenses
+      homeValue: initialHomeValue,
+      homeEquity: downPaymentAmount,
+      totalWealthBuying: downPaymentAmount + initialInvestment,
+      yearlyIncome: currentYearlyIncome,
+      yearlySavings: 0,
+      investmentsWithEarnings: initialInvestment,
+      initialInvestment,
+      amountInvested: initialInvestment,
+      investmentEarnings: 0,
+      monthlyData: monthlyBuyingData[0],
+      capitalGainsTaxPaid: 0,
+    });
   // --- End Year 0 Setup ---
 
   // Calculate for each year
@@ -147,7 +148,8 @@ export const calculateBuyingYearlyData = ({
         mortgagePayment + 
         monthlyPropertyTaxes +
         monthlyHomeInsurance +
-        monthlyMaintenanceCosts;
+        monthlyMaintenanceCosts +
+        (general.monthlyExpenses || 0); // Add optional monthly expenses
 
       // Track yearly totals
       yearlyMortgagePayment += mortgagePayment;
@@ -222,6 +224,7 @@ export const calculateBuyingYearlyData = ({
       propertyTaxes: yearlyPropertyTaxes,
       homeInsurance: yearlyHomeInsurance,
       maintenanceCosts: yearlyMaintenanceCosts,
+      monthlyExpenses: (general.monthlyExpenses || 0) * 12, // Annual total of monthly expenses
       homeValue: currentHomeValue,
       homeEquity: currentHomeEquity,
       totalWealthBuying: totalWealth,

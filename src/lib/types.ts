@@ -6,6 +6,7 @@ export interface GeneralInputs {
   incomeIncrease: boolean;
   annualIncomeGrowthRate: number;
   currentSavings: number;
+  monthlyExpenses?: number; // Optional monthly expenses
 }
 
 export interface BuyingInputs {
@@ -85,6 +86,7 @@ export interface YearlyBuyingResult {
   propertyTaxes: number;
   homeInsurance: number;
   maintenanceCosts: number;
+  monthlyExpenses: number;      // Added monthly expenses
   homeValue: number;
   homeEquity: number;
   totalWealthBuying: number;
@@ -102,6 +104,7 @@ export interface YearlyBuyingResult {
 export interface YearlyRentingResult {
   year: number;
   totalRent: number;
+  monthlyExpenses: number;      // Added monthly expenses
   amountInvested: number; // Total amount put into investments (initial + contributions)
   investmentValueBeforeTax: number;
   capitalGainsTaxPaid: number;

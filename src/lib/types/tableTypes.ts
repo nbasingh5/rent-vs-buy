@@ -18,6 +18,7 @@ export interface MonthlyTableData {
   propertyTaxes?: number;
   homeInsurance?: number;
   maintenanceCosts?: number;
+  monthlyExpenses?: number;
   totalRent?: number;
   homeValue?: number;
   homeEquity?: number;
@@ -42,6 +43,7 @@ export interface YearlyTableData {
   propertyTaxes?: number;
   homeInsurance?: number;
   maintenanceCosts?: number;
+  monthlyExpenses?: number;
   totalRent?: number;
   yearlySavings: number;
   amountInvested: number;

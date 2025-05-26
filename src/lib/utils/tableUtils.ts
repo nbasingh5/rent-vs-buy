@@ -32,6 +32,7 @@ export const generateMonthlyData = (year: number, rowData: YearlyTableData): Mon
       propertyTaxes: monthlyDataPoint.propertyTaxes || 0,
       homeInsurance: monthlyDataPoint.homeInsurance || 0,
       maintenanceCosts: monthlyDataPoint.maintenanceCosts || 0,
+      monthlyExpenses: rowData.monthlyExpenses ? rowData.monthlyExpenses / 12 : 0,
       homeValue: monthlyDataPoint.homeValue || 0,
       homeEquity: monthlyDataPoint.homeEquity || 0,
       loanBalance:  monthlyDataPoint.loanBalance || 0,
@@ -70,6 +71,8 @@ export const getTooltipContent = (key: string): string => {
       return "Annual home insurance cost based on home value.";
     case 'maintenanceCosts':
       return "Annual home maintenance costs.";
+    case 'monthlyExpenses':
+      return "Additional monthly expenses (e.g., utilities, food, transportation).";
     case 'totalRent':
       return "Annual rent payments.";
     case 'leftoverIncome':
@@ -136,6 +139,8 @@ export const getMonthlyTooltipContent = (key: string): string => {
       return "Monthly home insurance payment.";
     case 'maintenanceCosts':
       return "Monthly home maintenance costs.";
+    case 'monthlyExpenses':
+      return "Additional monthly expenses (e.g., utilities, food, transportation).";
     case 'homeValue':
       return "Estimated home value for this month.";
     case 'homeEquity':

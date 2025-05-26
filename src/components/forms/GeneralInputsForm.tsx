@@ -90,6 +90,14 @@ const GeneralInputsForm = ({
               onChange={handleIncomeChange}
               description={`Your gross ${isYearlyIncome ? 'annual' : 'monthly'} income`}
             />
+
+            <CurrencyInput
+              id="monthlyExpenses"
+              label="Monthly Expenses (Optional)"
+              value={values.monthlyExpenses || 0}
+              onChange={(expenses) => onChange({ ...values, monthlyExpenses: expenses })}
+              description="Your total monthly expenses (e.g., utilities, food, transportation)"
+            />
           </div>
           
           <div className="flex items-center space-x-2">

@@ -58,6 +58,7 @@ export const calculateRentingYearlyData = ({
   rentingResults.push({
     year: 0,
     totalRent: 0,
+    monthlyExpenses: (general.monthlyExpenses || 0) * 12, // Annual total of monthly expenses
     yearlySavings: 0,
     amountInvested: general.currentSavings,
     investmentValueBeforeTax: rentingInvestmentValue,
@@ -88,7 +89,8 @@ export const calculateRentingYearlyData = ({
 
     for (let month = 1; month <= 12; month++) {
       yearlyRent += monthlyRent;
-      const leftover = monthlyIncome - monthlyRent;
+      const monthlyExpenses = monthlyRent + (general.monthlyExpenses || 0); // Add optional monthly expenses
+      const leftover = monthlyIncome - monthlyExpenses;
       yearlyLeftoverIncome += leftover;
 
       if (leftover > 0) {
@@ -130,6 +132,7 @@ export const calculateRentingYearlyData = ({
     rentingResults.push({
       year,
       totalRent: yearlyRent,
+      monthlyExpenses: (general.monthlyExpenses || 0) * 12, // Annual total of monthly expenses
       amountInvested: yearlyInvested,
       investmentValueBeforeTax: rentingInvestmentValue,
       capitalGainsTaxPaid: 0,
