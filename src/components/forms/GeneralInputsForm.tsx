@@ -129,6 +129,19 @@ const GeneralInputsForm = ({
                   ${(formData.buying.housePrice * (formData.buying.downPaymentPercent / 100)).toLocaleString()}
                 </span>
                 <span> ({formData.buying.downPaymentPercent}% of ${formData.buying.housePrice.toLocaleString()})</span>
+                <div className="mt-2">
+                  <a 
+                    href="/down-payment-calculator" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-primary hover:text-primary/80 underline flex items-center"
+                  >
+                    <span>Need help saving for your down payment?</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1">
+                      <path d="M7 17l9.2-9.2M17 17V7H7" />
+                    </svg>
+                  </a>
+                </div>
               </div>
             )}
           </div>
