@@ -128,7 +128,7 @@ const FormContainer: React.FC<FormContainerProps> = ({
         {/* Investment Section */}
         <div>
           <div 
-            className="flex justify-between items-center cursor-pointer p-2 hover:bg-gray-50 rounded-md" 
+            className="flex justify-between items-center cursor-pointer p-2 hover:bg-gray-50 rounded-md text-xl font-semibold text-investment-dark" 
             onClick={() => toggleSection('investment')}
           >
             <h2 className="text-xl font-semibold">Investment Settings</h2>

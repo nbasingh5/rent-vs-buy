@@ -81,6 +81,11 @@ export default {
 					DEFAULT: 'hsl(160, 84%, 39%)', // Teal
 					light: 'hsl(160, 84%, 85%)',
 					dark: 'hsl(160, 84%, 19%)'
+				},
+				investment: {
+					DEFAULT: 'hsl(282, 67.80%, 41.40%)', // Purple
+					light: 'hsl(283, 75.00%, 65.50%)',
+					dark: 'hsl(290, 70.40%, 37.10%)'
 				}
 			},
 			borderRadius: {
