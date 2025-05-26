@@ -10,7 +10,6 @@ import { Label } from "../ui/label";
 import { FormDescription, FormItem } from "../ui/form";
 import { Separator } from "../ui/separator";
 import { Switch } from "../ui/switch";
-import { useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
 interface BuyingInputsFormProps {
