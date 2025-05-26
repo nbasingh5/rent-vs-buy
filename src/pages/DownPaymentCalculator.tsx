@@ -5,6 +5,7 @@ import InfoCard from "@/components/layout/InfoCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import SliderInput from "@/components/forms/SliderInput";
 import { Button } from "@/components/ui/button";
 import { calculateInvestmentReturnForMonth } from "@/lib/utils/investmentUtils";
 import { formatCurrency } from "@/lib/utils/formatters";
@@ -20,19 +21,17 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import PercentageInput from "@/components/forms/PercentageInput";
 
 const DownPaymentCalculator = () => {
-  // State for form inputs
-  const [annualIncome, setAnnualIncome] = useState<number>(100000);
+  // State for form inputs - keeping only the numeric values
+  const [incomeType, setIncomeType] = useState<'annual' | 'monthly'>('monthly');
+  const [income, setIncome] = useState<number>(6000);
   const [homePrice, setHomePrice] = useState<number>(500000);
   const [downPaymentPercent, setDownPaymentPercent] = useState<number>(20);
   const [timelineYears, setTimelineYears] = useState<number>(5);
   const [currentSavings, setCurrentSavings] = useState<number>(10000);
-
-  // State for formatted display values
-  const [annualIncomeDisplay, setAnnualIncomeDisplay] = useState<string>("$100,000");
-  const [homePriceDisplay, setHomePriceDisplay] = useState<string>("$500,000");
-  const [currentSavingsDisplay, setCurrentSavingsDisplay] = useState<string>("$10,000");
+  const [annualReturnRate, setAnnualReturnRate] = useState<number>(10);
 
   // State for calculation results
   const [downPaymentAmount, setDownPaymentAmount] = useState<number>(0);
@@ -61,18 +60,11 @@ const DownPaymentCalculator = () => {
     return parseFloat(value.replace(/[$,]/g, '')) || 0;
   };
 
-
-  // Handle currency input changes
-  const handleCurrencyChange = (
-    value: string,
-    setter: (num: number) => void,
-    displaySetter: (str: string) => void
-  ) => {
+  // Handle currency input changes - simplified to only update the numeric value
+  const handleCurrencyChange = (value: string, setter: (num: number) => void) => {
     const numericValue = parseCurrency(value);
     setter(numericValue);
-    displaySetter(formatCurrency(numericValue));
   };
-
 
   // Calculate down payment amount when home price or percentage changes
   useEffect(() => {
@@ -82,7 +74,7 @@ const DownPaymentCalculator = () => {
 
   useEffect(() => {
     setShowResults(false);
-  }, [annualIncome, homePrice, downPaymentPercent, timelineYears, currentSavings]);
+  }, [income, homePrice, downPaymentPercent, timelineYears, currentSavings]);
 
   // Handle form submission
   const handleCalculate = (e: React.FormEvent) => {
@@ -94,7 +86,7 @@ const DownPaymentCalculator = () => {
     const monthsToSave = timelineYears * 12;
 
     // Assuming S&P 500 average annual return of 10%
-    const annualReturnRate = 10;
+    // const annualReturnRate = 10;
 
     // Calculate monthly savings needed using compound interest formula
     let monthlySavings = 0;
@@ -210,6 +202,10 @@ const DownPaymentCalculator = () => {
     setShowResults(true);
   };
 
+  const handleAnnualReturnChange = (value: number) => { 
+    setAnnualReturnRate(value);
+  }
+
   // Format month name
   const getMonthName = (monthNumber: number): string => {
     const months = [
@@ -254,12 +250,40 @@ const DownPaymentCalculator = () => {
             <CardContent className="pt-6">
               <form onSubmit={handleCalculate} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="annualIncome">Annual Income</Label>
+                  <div className="flex justify-between items-center">
+                    <Label htmlFor="income">{incomeType === 'annual' ? 'Annual' : 'Monthly'} Income (Post tax)</Label>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        type="button"
+                        className={`px-3 py-1 text-sm rounded-md ${incomeType === 'monthly' ? 'bg-primary text-white' : 'bg-muted'}`}
+                        onClick={() => {
+                          if (incomeType === 'annual') {
+                            setIncomeType('monthly');
+                            setIncome(income / 12);
+                          }
+                        }}
+                      >
+                        Monthly
+                      </button>
+                      <button
+                        type="button"
+                        className={`px-3 py-1 text-sm rounded-md ${incomeType === 'annual' ? 'bg-primary text-white' : 'bg-muted'}`}
+                        onClick={() => {
+                          if (incomeType === 'monthly') {
+                            setIncomeType('annual');
+                            setIncome(income * 12);
+                          }
+                        }}
+                      >
+                        Annual
+                      </button>
+                    </div>
+                  </div>
                   <Input
-                    id="annualIncome"
+                    id="income"
                     type="text"
-                    value={annualIncomeDisplay}
-                    onChange={(e) => handleCurrencyChange(e.target.value, setAnnualIncome, setAnnualIncomeDisplay)}
+                    value={formatCurrency(income)}
+                    onChange={(e) => handleCurrencyChange(e.target.value, setIncome)}
                     required
                   />
                 </div>
@@ -269,31 +293,23 @@ const DownPaymentCalculator = () => {
                   <Input
                     id="homePrice"
                     type="text"
-                    value={homePriceDisplay}
-                    onChange={(e) => handleCurrencyChange(e.target.value, setHomePrice, setHomePriceDisplay)}
+                    value={formatCurrency(homePrice)}
+                    onChange={(e) => handleCurrencyChange(e.target.value, setHomePrice)}
                     required
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="downPaymentPercent">Down Payment Percentage</Label>
-                  <div className="relative">
-                    <Input
-                      id="downPaymentPercent"
-                      type="number"
-                      className="pr-7"
-                      value={downPaymentPercent}
-                      onChange={(e) => setDownPaymentPercent(Number(e.target.value))}
-                      min="1"
-                      max="100"
-                      required
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">%</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Down payment amount: {formatCurrency(downPaymentAmount)}
-                  </p>
-                </div>
+                <SliderInput
+                  id="downPaymentPercent"
+                  label="Down Payment"
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={downPaymentPercent}
+                  onChange={setDownPaymentPercent}
+                  valueDisplay={`${downPaymentPercent}% (${formatCurrency(downPaymentAmount)})`}
+                  description="The down payment as a percentage of the house price"
+                />
 
                 <div className="space-y-2">
                   <Label htmlFor="timelineYears">Timeline (Years)</Label>
@@ -313,10 +329,22 @@ const DownPaymentCalculator = () => {
                   <Input
                     id="currentSavings"
                     type="text"
-                    value={currentSavingsDisplay}
-                    onChange={(e) => handleCurrencyChange(e.target.value, setCurrentSavings, setCurrentSavingsDisplay)}
+                    value={formatCurrency(currentSavings)}
+                    onChange={(e) => handleCurrencyChange(e.target.value, setCurrentSavings)}
                     required
                   />
+                </div>
+
+                <div className="space-y-2">
+                    <PercentageInput
+                      id="annualReturn"
+                      label="S&P 500 Annual Return"
+                      value={annualReturnRate}
+                      onChange={handleAnnualReturnChange}
+                      description="The expected annual return on S&P 500 investments"
+                      min={0}
+                      max={30}
+                    />
                 </div>
 
                 <Button type="submit" className="w-full">Calculate Monthly Savings</Button>
@@ -358,7 +386,8 @@ const DownPaymentCalculator = () => {
                   </div>
 
                   {(() => {
-                    const monthlyMoneyLeft = (annualIncome / 12) - monthlySavingsNeeded;
+                    const monthlyIncome = incomeType === 'annual' ? income / 12 : income;
+                    const monthlyMoneyLeft = monthlyIncome - monthlySavingsNeeded;
                     const isNegative = monthlyMoneyLeft < 0;
 
                     return (
@@ -380,13 +409,13 @@ const DownPaymentCalculator = () => {
                               "text-sm",
                               isNegative ? "text-red-700" : "text-green-700"
                             )}>
-                              Monthly Income:
+                              Monthly Income (Post Tax):
                             </span>
                             <span className={cn(
                               "font-medium",
                               isNegative ? "text-red-800" : "text-green-800"
                             )}>
-                              {formatCurrency(annualIncome / 12)}
+                              {formatCurrency(monthlyIncome)}
                             </span>
                           </div>
                           <div className="flex justify-between items-center">
@@ -527,8 +556,9 @@ const DownPaymentCalculator = () => {
                         <TableRow>
                           <TableCell></TableCell>
                           <TableCell>Totals</TableCell>
-                          <TableCell>{formatCurrency(investmentGrowthData.length > 0 ? investmentGrowthData[investmentGrowthData.length - 1].totalContributions - currentSavings : 0)}</TableCell>
-                          <TableCell className="text-green-600">{formatCurrency(investmentGrowthData.length > 0 ? investmentGrowthData[investmentGrowthData.length - 1].totalReturns : 0)}</TableCell>
+                          <TableCell>-</TableCell>
+                          <TableCell className="text-green-600">{formatCurrency(investmentGrowthData.length > 0 ? investmentGrowthData[investmentGrowthData.length - 1].totalContributions : 0)}</TableCell>
+                          <TableCell>{formatCurrency(investmentGrowthData.length > 0 ? investmentGrowthData[investmentGrowthData.length - 1].totalReturns : 0)}</TableCell>
                           <TableCell>{formatCurrency(investmentGrowthData.length > 0 ? investmentGrowthData[investmentGrowthData.length - 1].endingBalance : 0)}</TableCell>
                         </TableRow>
                       </TableFooter>
