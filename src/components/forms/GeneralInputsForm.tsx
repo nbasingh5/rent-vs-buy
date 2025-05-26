@@ -29,7 +29,10 @@ const GeneralInputsForm = ({
     onChange({ ...values, timeHorizon });
   };
 
-  const handleAnnualIncomeChange = (annualIncome: number) => {
+  const [isYearlyIncome, setIsYearlyIncome] = useState(false);
+
+  const handleIncomeChange = (income: number) => {
+    const annualIncome = isYearlyIncome ? income : income * 12;
     onChange({ ...values, annualIncome });
   };
 
@@ -68,13 +71,26 @@ const GeneralInputsForm = ({
           
           <Separator />
           
-          <CurrencyInput
-            id="annualIncome"
-            label="Annual Income"
-            value={values.annualIncome}
-            onChange={handleAnnualIncomeChange}
-            description="Your gross annual income"
-          />
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="incomeMode"
+                  checked={isYearlyIncome}
+                  onCheckedChange={setIsYearlyIncome}
+                />
+                <Label htmlFor="incomeMode">Use annual income</Label>
+              </div>
+            </div>
+            
+            <CurrencyInput
+              id="income"
+              label={isYearlyIncome ? "Annual Income (Post Tax)" : "Monthly Income (Post Tax)"}
+              value={isYearlyIncome ?  values.annualIncome : values.annualIncome / 12}
+              onChange={handleIncomeChange}
+              description={`Your gross ${isYearlyIncome ? 'annual' : 'monthly'} income`}
+            />
+          </div>
           
           <div className="flex items-center space-x-2">
             <Switch
@@ -132,8 +148,6 @@ const GeneralInputsForm = ({
                 <div className="mt-2">
                   <a 
                     href="/down-payment-calculator" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
                     className="text-primary hover:text-primary/80 underline flex items-center"
                   >
                     <span>Need help saving for your down payment?</span>

@@ -7,10 +7,10 @@ import { toast } from "@/components/ui/use-toast";
 // Default form values
 const defaultGeneral: GeneralInputs = {
   timeHorizon: 30,
-  annualIncome: 100000,
+  annualIncome: 72000,
   incomeIncrease: false,
   annualIncomeGrowthRate: 3,
-  currentSavings: 100000,
+  currentSavings: 80000,
 };
 
 const defaultBuying: BuyingInputs = {

@@ -31,7 +31,7 @@ const FormContainer: React.FC<FormContainerProps> = ({
   const [showSections, setShowSections] = useState({
     buying: true,
     renting: true,
-    investment: true,
+    investment: false,
   });
 
   // Toggle section visibility
