@@ -2,29 +2,33 @@ import React, { useState, useEffect } from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import InfoCard from "@/components/layout/InfoCard";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import SliderInput from "@/components/forms/SliderInput";
-import { Button } from "@/components/ui/button";
+import DownPaymentForm from "@/components/calculators/downpayment/DownPaymentForm";
+import SavingsPlanResults from "@/components/calculators/downpayment/SavingsPlanResults";
+import InvestmentGrowthTable from "@/components/calculators/downpayment/InvestmentGrowthTable";
 import { calculateInvestmentReturnForMonth } from "@/lib/utils/investmentUtils";
-import { formatCurrency } from "@/lib/utils/formatters";
-import { cn } from "@/lib/utils";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table";
-import { ChevronDown, ChevronRight } from "lucide-react";
-import PercentageInput from "@/components/forms/PercentageInput";
+
+interface MonthlyData {
+  month: number;
+  startingBalance: number;
+  contribution: number;
+  investmentReturn: number;
+  endingBalance: number;
+}
+
+interface YearlyData {
+  period: number;
+  startingBalance: number;
+  contribution: number;
+  investmentReturn: number;
+  endingBalance: number;
+  totalContributions: number;
+  totalReturns: number;
+  capitalGains: number;
+  monthlyData: MonthlyData[];
+}
 
 const DownPaymentCalculator = () => {
-  // State for form inputs - keeping only the numeric values
+  // State for form inputs
   const [incomeType, setIncomeType] = useState<'annual' | 'monthly'>('monthly');
   const [income, setIncome] = useState<number>(6000);
   const [homePrice, setHomePrice] = useState<number>(500000);
@@ -32,39 +36,13 @@ const DownPaymentCalculator = () => {
   const [timelineYears, setTimelineYears] = useState<number>(5);
   const [currentSavings, setCurrentSavings] = useState<number>(10000);
   const [annualReturnRate, setAnnualReturnRate] = useState<number>(10);
+  const [capitalGainsTaxRate, setCapitalGainsTaxRate] = useState<number>(15);
 
   // State for calculation results
   const [downPaymentAmount, setDownPaymentAmount] = useState<number>(0);
   const [monthlySavingsNeeded, setMonthlySavingsNeeded] = useState<number>(0);
   const [showResults, setShowResults] = useState<boolean>(false);
-  const [investmentGrowthData, setInvestmentGrowthData] = useState<Array<{
-    period: number;
-    startingBalance: number;
-    contribution: number;
-    investmentReturn: number;
-    endingBalance: number;
-    totalContributions: number;
-    totalReturns: number;
-    monthlyData?: Array<{
-      month: number;
-      startingBalance: number;
-      contribution: number;
-      investmentReturn: number;
-      endingBalance: number;
-    }>;
-  }>>([]);
-  const [expandedYear, setExpandedYear] = useState<number | null>(null);
-
-  // Utility function to parse currency string to number
-  const parseCurrency = (value: string): number => {
-    return parseFloat(value.replace(/[$,]/g, '')) || 0;
-  };
-
-  // Handle currency input changes - simplified to only update the numeric value
-  const handleCurrencyChange = (value: string, setter: (num: number) => void) => {
-    const numericValue = parseCurrency(value);
-    setter(numericValue);
-  };
+  const [investmentGrowthData, setInvestmentGrowthData] = useState<YearlyData[]>([]);
 
   // Calculate down payment amount when home price or percentage changes
   useEffect(() => {
@@ -85,64 +63,55 @@ const DownPaymentCalculator = () => {
     const startingAmount = currentSavings;
     const monthsToSave = timelineYears * 12;
 
-    // Assuming S&P 500 average annual return of 10%
-    // const annualReturnRate = 10;
-
     // Calculate monthly savings needed using compound interest formula
     let monthlySavings = 0;
     let currentTotal = startingAmount;
 
     // Iterative approach to find the monthly savings needed
     for (let month = 1; month <= monthsToSave; month++) {
-      // Calculate investment return for the month
       const monthlyReturn = calculateInvestmentReturnForMonth(currentTotal, annualReturnRate);
-
-      // Add the monthly savings and return to the total
       currentTotal += monthlySavings + monthlyReturn;
     }
 
     // Use binary search to find the right monthly savings amount
     let low = 0;
-    let high = (targetAmount - startingAmount) / monthsToSave * 2; // Initial guess
+    let high = (targetAmount - startingAmount) / monthsToSave * 3; // Increased initial guess to account for taxes
+    let finalTotal = 0;
+    let finalTotalAfterTax = 0;
 
     while (high - low > 1) {
       monthlySavings = (high + low) / 2;
 
       // Simulate savings growth
       currentTotal = startingAmount;
+      let totalReturns = 0;
+
       for (let month = 1; month <= monthsToSave; month++) {
         const monthlyReturn = calculateInvestmentReturnForMonth(currentTotal, annualReturnRate);
         currentTotal += monthlySavings + monthlyReturn;
+        totalReturns += monthlyReturn;
       }
 
-      if (currentTotal > targetAmount) {
+      // Calculate capital gains tax
+      const capitalGainsTax = totalReturns * (capitalGainsTaxRate / 100);
+      const totalAfterTax = currentTotal - capitalGainsTax;
+
+      if (totalAfterTax >= targetAmount) {
         high = monthlySavings;
+        finalTotal = currentTotal;
+        finalTotalAfterTax = totalAfterTax;
       } else {
         low = monthlySavings;
       }
     }
 
     // Calculate investment growth data for the table
-    const growthData = [];
+    const growthData: YearlyData[] = [];
     let balance = startingAmount;
     let totalContributions = startingAmount;
     let totalReturns = 0;
-    let yearlyData: {
-      period: number;
-      startingBalance: number;
-      contribution: number;
-      investmentReturn: number;
-      endingBalance: number;
-      totalContributions: number;
-      totalReturns: number;
-      monthlyData: Array<{
-        month: number;
-        startingBalance: number;
-        contribution: number;
-        investmentReturn: number;
-        endingBalance: number;
-      }>;
-    } | null = null;
+    let yearlyData: YearlyData | null = null;
+    let previousYearReturns = 0;
 
     for (let month = 1; month <= monthsToSave; month++) {
       const startingBalance = balance;
@@ -164,8 +133,9 @@ const DownPaymentCalculator = () => {
           endingBalance: balance,
           totalContributions,
           totalReturns,
+          capitalGains: 0,
           monthlyData: [{
-            month: (month - 1) % 12 + 1, // Convert to 1-12 month format
+            month: (month - 1) % 12 + 1,
             startingBalance,
             contribution,
             investmentReturn,
@@ -175,7 +145,7 @@ const DownPaymentCalculator = () => {
       } else if (yearlyData) {
         // Add monthly data to the current year
         yearlyData.monthlyData.push({
-          month: (month - 1) % 12 + 1, // Convert to 1-12 month format
+          month: (month - 1) % 12 + 1,
           startingBalance,
           contribution,
           investmentReturn,
@@ -197,31 +167,20 @@ const DownPaymentCalculator = () => {
       }
     }
 
+    // Calculate capital gains tax only for the final year
+    const lastYear = growthData[growthData.length - 1];
+    // Capital gains tax is calculated on all investment returns
+    lastYear.capitalGains = lastYear.totalReturns * (capitalGainsTaxRate / 100);
+    lastYear.endingBalance -= lastYear.capitalGains;
+
+    // Set capital gains to 0 for all other years
+    growthData.slice(0, -1).forEach(yearData => {
+      yearData.capitalGains = 0;
+    });
+
     setInvestmentGrowthData(growthData);
     setMonthlySavingsNeeded(high);
     setShowResults(true);
-  };
-
-  const handleAnnualReturnChange = (value: number) => { 
-    setAnnualReturnRate(value);
-  }
-
-  // Format month name
-  const getMonthName = (monthNumber: number): string => {
-    const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
-    ];
-    return months[monthNumber - 1];
-  };
-
-  // Toggle year expansion
-  const toggleYearExpansion = (year: number) => {
-    if (expandedYear === year) {
-      setExpandedYear(null);
-    } else {
-      setExpandedYear(year);
-    }
   };
 
   return (
@@ -243,330 +202,44 @@ const DownPaymentCalculator = () => {
         </InfoCard>
 
         <div className="grid md:grid-cols-2 gap-8">
-          <Card>
-            <CardHeader className="bg-muted">
-              <CardTitle>Down Payment Calculator</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <form onSubmit={handleCalculate} className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <Label htmlFor="income">{incomeType === 'annual' ? 'Annual' : 'Monthly'} Income (Post tax)</Label>
-                    <div className="flex items-center space-x-2">
-                      <button
-                        type="button"
-                        className={`px-3 py-1 text-sm rounded-md ${incomeType === 'monthly' ? 'bg-primary text-white' : 'bg-muted'}`}
-                        onClick={() => {
-                          if (incomeType === 'annual') {
-                            setIncomeType('monthly');
-                            setIncome(income / 12);
-                          }
-                        }}
-                      >
-                        Monthly
-                      </button>
-                      <button
-                        type="button"
-                        className={`px-3 py-1 text-sm rounded-md ${incomeType === 'annual' ? 'bg-primary text-white' : 'bg-muted'}`}
-                        onClick={() => {
-                          if (incomeType === 'monthly') {
-                            setIncomeType('annual');
-                            setIncome(income * 12);
-                          }
-                        }}
-                      >
-                        Annual
-                      </button>
-                    </div>
-                  </div>
-                  <Input
-                    id="income"
-                    type="text"
-                    value={formatCurrency(income)}
-                    onChange={(e) => handleCurrencyChange(e.target.value, setIncome)}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="homePrice">Home Price</Label>
-                  <Input
-                    id="homePrice"
-                    type="text"
-                    value={formatCurrency(homePrice)}
-                    onChange={(e) => handleCurrencyChange(e.target.value, setHomePrice)}
-                    required
-                  />
-                </div>
-
-                <SliderInput
-                  id="downPaymentPercent"
-                  label="Down Payment"
-                  min={0}
-                  max={100}
-                  step={1}
-                  value={downPaymentPercent}
-                  onChange={setDownPaymentPercent}
-                  valueDisplay={`${downPaymentPercent}% (${formatCurrency(downPaymentAmount)})`}
-                  description="The down payment as a percentage of the house price"
-                />
-
-                <div className="space-y-2">
-                  <Label htmlFor="timelineYears">Timeline (Years)</Label>
-                  <Input
-                    id="timelineYears"
-                    type="number"
-                    value={timelineYears}
-                    onChange={(e) => setTimelineYears(Number(e.target.value))}
-                    min="1"
-                    max="30"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="currentSavings">Current Savings</Label>
-                  <Input
-                    id="currentSavings"
-                    type="text"
-                    value={formatCurrency(currentSavings)}
-                    onChange={(e) => handleCurrencyChange(e.target.value, setCurrentSavings)}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                    <PercentageInput
-                      id="annualReturn"
-                      label="S&P 500 Annual Return"
-                      value={annualReturnRate}
-                      onChange={handleAnnualReturnChange}
-                      description="The expected annual return on S&P 500 investments"
-                      min={0}
-                      max={30}
-                    />
-                </div>
-
-                <Button type="submit" className="w-full">Calculate Monthly Savings</Button>
-              </form>
-            </CardContent>
-          </Card>
+          <DownPaymentForm
+            incomeType={incomeType}
+            income={income}
+            homePrice={homePrice}
+            downPaymentPercent={downPaymentPercent}
+            downPaymentAmount={downPaymentAmount}
+            timelineYears={timelineYears}
+            currentSavings={currentSavings}
+            annualReturnRate={annualReturnRate}
+            capitalGainsTaxRate={capitalGainsTaxRate}
+            onIncomeTypeChange={setIncomeType}
+            onIncomeChange={setIncome}
+            onHomePriceChange={setHomePrice}
+            onDownPaymentPercentChange={setDownPaymentPercent}
+            onTimelineYearsChange={setTimelineYears}
+            onCurrentSavingsChange={setCurrentSavings}
+            onAnnualReturnChange={setAnnualReturnRate}
+            onCapitalGainsTaxRateChange={setCapitalGainsTaxRate}
+            onSubmit={handleCalculate}
+          />
 
           {showResults && (
-            <Card>
-              <CardHeader className="bg-muted">
-                <CardTitle>Your Savings Plan</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-lg font-medium">Down Payment Goal</h3>
-                    <p className="text-3xl font-bold text-primary">{formatCurrency(downPaymentAmount)}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {downPaymentPercent}% of {formatCurrency(homePrice)}
-                    </p>
-                  </div>
+            <div className="space-y-8">
+              <SavingsPlanResults
+                downPaymentAmount={downPaymentAmount}
+                downPaymentPercent={downPaymentPercent}
+                homePrice={homePrice}
+                currentSavings={currentSavings}
+                monthlySavingsNeeded={monthlySavingsNeeded}
+                timelineYears={timelineYears}
+                monthlyIncome={incomeType === 'annual' ? income / 12 : income}
+              />
 
-                  <div>
-                    <h3 className="text-lg font-medium">Current Savings</h3>
-                    <p className="text-2xl font-semibold">{formatCurrency(currentSavings)}</p>
-                  </div>
-
-                  <div>
-                    <h3 className="text-lg font-medium">Amount Needed</h3>
-                    <p className="text-2xl font-semibold">{formatCurrency(downPaymentAmount - currentSavings)}</p>
-                  </div>
-
-                  <div className="bg-primary/10 p-4 rounded-lg">
-                    <h3 className="text-lg font-medium">Monthly Savings Needed</h3>
-                    <p className="text-4xl font-bold text-primary">{formatCurrency(monthlySavingsNeeded)}</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Over {timelineYears} {timelineYears === 1 ? 'year' : 'years'} ({timelineYears * 12} months)
-                    </p>
-                  </div>
-
-                  {(() => {
-                    const monthlyIncome = incomeType === 'annual' ? income / 12 : income;
-                    const monthlyMoneyLeft = monthlyIncome - monthlySavingsNeeded;
-                    const isNegative = monthlyMoneyLeft < 0;
-
-                    return (
-                      <div className={cn(
-                        "p-4 rounded-lg border",
-                        isNegative
-                          ? "bg-red-50 border-red-200"
-                          : "bg-green-50 border-green-200"
-                      )}>
-                        <h3 className={cn(
-                          "text-lg font-medium",
-                          isNegative ? "text-red-800" : "text-green-800"
-                        )}>
-                          Monthly Income Breakdown
-                        </h3>
-                        <div className="mt-2 space-y-2">
-                          <div className="flex justify-between items-center">
-                            <span className={cn(
-                              "text-sm",
-                              isNegative ? "text-red-700" : "text-green-700"
-                            )}>
-                              Monthly Income (Post Tax):
-                            </span>
-                            <span className={cn(
-                              "font-medium",
-                              isNegative ? "text-red-800" : "text-green-800"
-                            )}>
-                              {formatCurrency(monthlyIncome)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className={cn(
-                              "text-sm",
-                              isNegative ? "text-red-700" : "text-green-700"
-                            )}>
-                              Required Monthly Savings:
-                            </span>
-                            <span className={cn(
-                              "font-medium",
-                              isNegative ? "text-red-800" : "text-green-800"
-                            )}>
-                              -{formatCurrency(monthlySavingsNeeded)}
-                            </span>
-                          </div>
-                          <div className={cn(
-                            "border-t pt-2 mt-2",
-                            isNegative ? "border-red-200" : "border-green-200"
-                          )}>
-                            <div className="flex justify-between items-center">
-                              <span className={cn(
-                                "text-sm font-medium",
-                                isNegative ? "text-red-800" : "text-green-800"
-                              )}>
-                                Monthly Money Left:
-                              </span>
-                              <span className={cn(
-                                "font-bold",
-                                isNegative ? "text-red-800" : "text-green-800"
-                              )}>
-                                {formatCurrency(monthlyMoneyLeft)}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })()}
-
-                  <div>
-                    <h3 className="text-lg font-medium">Assumptions</h3>
-                    <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
-                      <li>S&P 500 average annual return: 10%</li>
-                      <li>Monthly compounding of returns</li>
-                      <li>Consistent monthly contributions</li>
-                    </ul>
-                  </div>
-
-                  <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                    <h3 className="text-sm font-medium text-yellow-800">Important Note</h3>
-                    <p className="text-xs text-yellow-700 mt-1">
-                      This calculator provides an estimate based on historical average returns.
-                      Actual investment performance may vary. Past performance is not a guarantee of future results.
-                    </p>
-                  </div>
-
-                  {/* Investment Growth Table */}
-                  <div className="mt-6">
-                    <h3 className="text-lg font-medium mb-3">Down Payment Savings Growth</h3>
-                    <Table>
-                      <TableCaption>
-                        Investment growth over {timelineYears} {timelineYears === 1 ? 'year' : 'years'} (Click on a year to see monthly breakdown)
-                      </TableCaption>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead></TableHead>
-                          <TableHead>Year</TableHead>
-                          <TableHead>Starting Balance</TableHead>
-                          <TableHead>Annual Contribution</TableHead>
-                          <TableHead>Investment Returns</TableHead>
-                          <TableHead>Ending Balance</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {investmentGrowthData.map((data, index) => (
-                          <React.Fragment key={index}>
-                            <TableRow
-                              className={cn(
-                                "cursor-pointer hover:bg-muted/80",
-                                expandedYear === data.period ? "bg-muted/70" : ""
-                              )}
-                              onClick={() => toggleYearExpansion(data.period)}
-                            >
-                              <TableCell className="w-6">
-                                {expandedYear === data.period ?
-                                  <ChevronDown className="h-4 w-4" /> :
-                                  <ChevronRight className="h-4 w-4" />
-                                }
-                              </TableCell>
-                              <TableCell>{data.period}</TableCell>
-                              <TableCell>{formatCurrency(data.startingBalance)}</TableCell>
-                              <TableCell>{formatCurrency(data.contribution * 12)}</TableCell>
-                              <TableCell className="text-green-600">
-                                {formatCurrency(data.totalReturns - (index > 0 ? investmentGrowthData[index - 1].totalReturns : 0))}
-                              </TableCell>
-                              <TableCell className="font-medium">{formatCurrency(data.endingBalance)}</TableCell>
-                            </TableRow>
-
-                            {/* Monthly breakdown */}
-                            {expandedYear === data.period && data.monthlyData && (
-                              <TableRow>
-                                <TableCell colSpan={6} className="p-0 border-0">
-                                  <div className="bg-muted/30 px-4 py-2 rounded-md mx-2 my-1">
-                                    <h4 className="text-sm font-medium mb-2">Monthly Breakdown - Year {data.period}</h4>
-                                    <Table>
-                                      <TableHeader>
-                                        <TableRow>
-                                          <TableHead className="text-xs">Month</TableHead>
-                                          <TableHead className="text-xs">Starting Balance</TableHead>
-                                          <TableHead className="text-xs">Contribution</TableHead>
-                                          <TableHead className="text-xs">Investment Return</TableHead>
-                                          <TableHead className="text-xs">Ending Balance</TableHead>
-                                        </TableRow>
-                                      </TableHeader>
-                                      <TableBody>
-                                        {data.monthlyData.map((monthData, monthIndex) => (
-                                          <TableRow key={monthIndex} className="text-xs">
-                                            <TableCell>{getMonthName(monthData.month)}</TableCell>
-                                            <TableCell>{formatCurrency(monthData.startingBalance)}</TableCell>
-                                            <TableCell>{formatCurrency(monthData.contribution)}</TableCell>
-                                            <TableCell className="text-green-600">
-                                              {formatCurrency(monthData.investmentReturn)}
-                                            </TableCell>
-                                            <TableCell>{formatCurrency(monthData.endingBalance)}</TableCell>
-                                          </TableRow>
-                                        ))}
-                                      </TableBody>
-                                    </Table>
-                                  </div>
-                                </TableCell>
-                              </TableRow>
-                            )}
-                          </React.Fragment>
-                        ))}
-                      </TableBody>
-                      <TableFooter>
-                        <TableRow>
-                          <TableCell></TableCell>
-                          <TableCell>Totals</TableCell>
-                          <TableCell>-</TableCell>
-                          <TableCell className="text-green-600">{formatCurrency(investmentGrowthData.length > 0 ? investmentGrowthData[investmentGrowthData.length - 1].totalContributions : 0)}</TableCell>
-                          <TableCell>{formatCurrency(investmentGrowthData.length > 0 ? investmentGrowthData[investmentGrowthData.length - 1].totalReturns : 0)}</TableCell>
-                          <TableCell>{formatCurrency(investmentGrowthData.length > 0 ? investmentGrowthData[investmentGrowthData.length - 1].endingBalance : 0)}</TableCell>
-                        </TableRow>
-                      </TableFooter>
-                    </Table>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+              <InvestmentGrowthTable
+                investmentGrowthData={investmentGrowthData}
+                timelineYears={timelineYears}
+              />
+            </div>
           )}
         </div>
       </main>
