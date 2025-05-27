@@ -162,16 +162,14 @@ export const calculateBuyingYearlyData = ({
       const leftoverMonthlyIncome = monthlyIncome - monthlyExpenses;
       yearlyLeftoverIncome += leftoverMonthlyIncome;
 
-      // Add new investment contributions to the total amount invested
-      if (leftoverMonthlyIncome > 0) {
-        amountInvested += leftoverMonthlyIncome;
-      }
+
+      amountInvested += leftoverMonthlyIncome;
 
       // Calculate monthly investment return on current amount invested
-      const monthlyReturn = calculateInvestmentReturnForMonth(
+      const monthlyReturn = amountInvested > 0 ? calculateInvestmentReturnForMonth(
         amountInvested,
         investment.annualReturn
-      );
+      ) : 0;
 
       yearlyInvestmentEarnings += monthlyReturn;
       

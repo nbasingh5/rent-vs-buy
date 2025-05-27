@@ -93,23 +93,21 @@ export const calculateRentingYearlyData = ({
       const leftover = monthlyIncome - monthlyExpenses;
       yearlyLeftoverIncome += leftover;
 
-      if (leftover > 0) {
-        rentingTotalContributions += leftover;
-        contributionsThisYear += leftover;
-        basis += leftover;
-      }
+    
+      rentingTotalContributions += leftover;
+      contributionsThisYear += leftover;
+      basis += leftover;
 
       const amountInvested = previousMonthInvestmentValue + leftover;
       yearlyInvested = amountInvested;
-      const earnings = calculateInvestmentReturnForMonth(
+      const earnings = amountInvested > 0 ? calculateInvestmentReturnForMonth(
         amountInvested,
         investment.annualReturn
-      );
+      ): 0;
       totalGains += earnings;
 
       const endBeforeTax =
-        previousMonthInvestmentValue + earnings + Math.max(0, leftover);
-      const endAfterTax = endBeforeTax;
+        previousMonthInvestmentValue + earnings + leftover;
 
       monthlyRentingData[year].push({
         month,
@@ -120,12 +118,12 @@ export const calculateRentingYearlyData = ({
         investmentEarnings: earnings,
         investmentValueBeforeTax: endBeforeTax,
         capitalGainsTax: 0,
-        totalWealthRenting: endAfterTax,
+        totalWealthRenting: endBeforeTax,
         initialInvestment: previousYear.initialInvestment,
         additionalContributions: rentingTotalContributions,
       });
 
-      previousMonthInvestmentValue = endAfterTax;
+      previousMonthInvestmentValue = endBeforeTax;
       rentingInvestmentValue = endBeforeTax;
     }
 

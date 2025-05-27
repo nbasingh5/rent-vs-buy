@@ -1,4 +1,3 @@
-
 import { Table, TableBody, TableHeader, TableRow, TableHead } from "../ui/table";
 import ExpandableRow from "./ExpandableRow";
 import { ComparisonTableData, TableColumn, YearlyTableData } from "@/lib/types/tableTypes";
@@ -9,6 +8,7 @@ interface ComparisonTableTabProps {
   tabId: string;
   expandedRows: Record<string, boolean>;
   onToggleRow: (tabId: string, rowId: number) => void;
+  className?: string;
 }
 
 const ComparisonTableTab = ({ 
@@ -16,10 +16,11 @@ const ComparisonTableTab = ({
   columns, 
   tabId, 
   expandedRows, 
-  onToggleRow 
+  onToggleRow,
+  className = ""
 }: ComparisonTableTabProps) => {
   return (
-    <div className="rounded-md border overflow-x-auto">
+    <div className={`rounded-md border overflow-x-auto ${className}`}>
       <Table>
         <TableHeader>
           <TableRow>
