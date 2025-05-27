@@ -20,9 +20,6 @@ const RentingInputsForm = ({ values, onChange }: RentingInputsFormProps) => {
 
   return (
     <Card>
-      <CardHeader className="bg-rent/10">
-        <CardTitle className="text-rent-dark">Renting Scenario</CardTitle>
-      </CardHeader>
       <CardContent className="pt-6">
         <div className="grid gap-6">
           <CurrencyInput

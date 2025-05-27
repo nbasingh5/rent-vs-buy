@@ -184,24 +184,26 @@ const DownPaymentCalculator = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 to-blue-100">
       <Header />
 
       <main className="flex-grow py-8 px-4 md:px-8 max-w-120rem mx-auto w-full">
-        <InfoCard title="Down Payment Savings Calculator">
-          <p>
-            This calculator helps you determine how much you need to save each month to reach your down payment goal.
-            It assumes you'll be investing your savings in the S&P 500 with an average annual return of 10%.
-          </p>
-          <ul className="list-disc pl-5 mt-3 space-y-1">
-            <li>Enter your financial details and home price</li>
-            <li>Specify your desired down payment percentage</li>
-            <li>Set your timeline for saving</li>
-            <li>Calculate how much you need to save monthly</li>
-          </ul>
-        </InfoCard>
+        <div className="mb-8 p-6 bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-white/20">
+          <InfoCard title="Down Payment Savings Calculator">
+            <p>
+              This calculator helps you determine how much you need to save each month to reach your down payment goal.
+              It assumes you'll be investing your savings in the S&P 500 with an average annual return of 10%.
+            </p>
+            <ul className="list-disc pl-5 mt-3 space-y-1">
+              <li>Enter your financial details and home price</li>
+              <li>Specify your desired down payment percentage</li>
+              <li>Set your timeline for saving</li>
+              <li>Calculate how much you need to save monthly</li>
+            </ul>
+          </InfoCard>
+        </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-2 gap-8 p-6 bg-white/60 backdrop-blur-sm rounded-xl shadow-sm border border-white/20">
           <DownPaymentForm
             incomeType={incomeType}
             income={income}

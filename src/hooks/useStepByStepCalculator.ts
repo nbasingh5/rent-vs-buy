@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { BuyingInputs, ComparisonResults, FormData, GeneralInputs, InvestmentInputs, RentingInputs } from "@/lib/types";
 import { calculateComparison } from "@/lib/calculations";
@@ -37,7 +36,9 @@ const defaultInvestment: InvestmentInputs = {
   capitalGainsTaxRate: 15,
 };
 
-export const useRentBuyCalculator = () => {
+export type Step = 'general' | 'buying' | 'renting' | 'investment' | 'results';
+
+export const useStepByStepCalculator = () => {
   // Form state
   const [formData, setFormData] = useState<FormData>({
     general: defaultGeneral,
@@ -46,6 +47,9 @@ export const useRentBuyCalculator = () => {
     investment: defaultInvestment,
   });
 
+  // Step state
+  const [currentStep, setCurrentStep] = useState<Step>('general');
+  
   // Results state
   const [results, setResults] = useState<ComparisonResults | null>(null);
   
@@ -68,28 +72,42 @@ export const useRentBuyCalculator = () => {
     downPaymentPercent: number
   ) => {
     const downPaymentAmount = housePrice * (downPaymentPercent / 100);
-    console.log(`Validating savings: currentSavings=${currentSavings}, housePrice=${housePrice}, downPaymentPercent=${downPaymentPercent}`);
     
     if (currentSavings < downPaymentAmount) {
       setValidationError(`Your current savings ($${currentSavings.toLocaleString()}) are less than the required down payment ($${downPaymentAmount.toLocaleString()})`);
+      return false;
     } else {
       setValidationError(null);
+      return true;
     }
   };
   
   // Form update handlers
   const handleGeneralChange = (general: GeneralInputs) => {
     setFormData({ ...formData, general });
-    // Validate if current savings changed
-    validateSavingsForDownPayment(
-      general.currentSavings,
-      formData.buying.housePrice,
-      general.downPaymentPercent
-    );
+    
+    // Validate if current savings or down payment percent changed
+    if (general.currentSavings !== formData.general.currentSavings || 
+        general.downPaymentPercent !== formData.general.downPaymentPercent) {
+      validateSavingsForDownPayment(
+        general.currentSavings,
+        formData.buying.housePrice,
+        general.downPaymentPercent
+      );
+    }
   };
   
   const handleBuyingChange = (buying: BuyingInputs) => {
     setFormData({ ...formData, buying });
+    
+    // Validate if house price or down payment percent changed
+    if (buying.housePrice !== formData.buying.housePrice) {
+      validateSavingsForDownPayment(
+        formData.general.currentSavings,
+        buying.housePrice,
+        formData.general.downPaymentPercent
+      );
+    }
   };
   
   const handleRentingChange = (renting: RentingInputs) => {
@@ -110,6 +128,7 @@ export const useRentBuyCalculator = () => {
     });
     setResults(null);
     setValidationError(null);
+    setCurrentStep('general');
   };
   
   // Calculate results
@@ -138,14 +157,68 @@ export const useRentBuyCalculator = () => {
     const calculationResults = calculateComparison(formData);
     setResults(calculationResults);
     
-    // Scroll to results
-    setTimeout(() => {
-      document.getElementById('results')?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
+    // Move to results step
+    setCurrentStep('results');
+  };
+
+  // Navigation functions
+  const goToNextStep = () => {
+    switch (currentStep) {
+      case 'general':
+        setCurrentStep('buying');
+        break;
+      case 'buying':
+        setCurrentStep('renting');
+        break;
+      case 'renting':
+        setCurrentStep('investment');
+        break;
+      case 'investment':
+        handleCalculate();
+        break;
+      default:
+        break;
+    }
+  };
+
+  const goToPreviousStep = () => {
+    switch (currentStep) {
+      case 'buying':
+        setCurrentStep('general');
+        break;
+      case 'renting':
+        setCurrentStep('buying');
+        break;
+      case 'investment':
+        setCurrentStep('renting');
+        break;
+      case 'results':
+        setCurrentStep('investment');
+        break;
+      default:
+        break;
+    }
+  };
+
+  const goToStep = (step: Step) => {
+    setCurrentStep(step);
+  };
+
+  // Check if can proceed to next step
+  const canProceedToNextStep = (): boolean => {
+    if (currentStep === 'general') {
+      return validateSavingsForDownPayment(
+        formData.general.currentSavings,
+        formData.buying.housePrice,
+        formData.general.downPaymentPercent
+      );
+    }
+    return true;
   };
 
   return {
     formData,
+    currentStep,
     results,
     validationError,
     handleGeneralChange,
@@ -153,6 +226,10 @@ export const useRentBuyCalculator = () => {
     handleRentingChange,
     handleInvestmentChange,
     handleReset,
-    handleCalculate
+    handleCalculate,
+    goToNextStep,
+    goToPreviousStep,
+    goToStep,
+    canProceedToNextStep
   };
 };

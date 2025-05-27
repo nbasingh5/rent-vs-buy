@@ -22,10 +22,6 @@ const BuyingInputsForm = ({ values, onChange }: BuyingInputsFormProps) => {
     onChange({ ...values, housePrice });
   };
 
-  const handleDownPaymentPercentChange = (downPaymentPercent: number) => {
-    onChange({ ...values, downPaymentPercent });
-  };
-
   const handleInterestRateChange = (interestRate: number) => {
     onChange({ ...values, interestRate });
   };
@@ -62,16 +58,10 @@ const BuyingInputsForm = ({ values, onChange }: BuyingInputsFormProps) => {
     onChange({ ...values, customAppreciationRate });
   };
 
-  // Calculate down payment amount
-  const downPaymentAmount = values.housePrice * (values.downPaymentPercent / 100);
-
   return (
     <Card>
-      <CardHeader className="bg-buy/10">
-        <CardTitle className="text-buy-dark">Buying Scenario</CardTitle>
-      </CardHeader>
       <CardContent className="pt-6">
-        <div className="grid gap-6">
+        <div>
           <div className="space-y-6">
             <CurrencyInput
               id="housePrice"
@@ -79,18 +69,6 @@ const BuyingInputsForm = ({ values, onChange }: BuyingInputsFormProps) => {
               value={values.housePrice}
               onChange={handleHousePriceChange}
               description="The estimated purchase price of the house"
-            />
-            
-            <SliderInput
-              id="downPaymentPercent"
-              label="Down Payment"
-              min={0}
-              max={100}
-              step={1}
-              value={values.downPaymentPercent}
-              onChange={handleDownPaymentPercentChange}
-              valueDisplay={`${values.downPaymentPercent}% (${formatCurrency(downPaymentAmount)})`}
-              description="The down payment as a percentage of the house price"
             />
           </div>
 

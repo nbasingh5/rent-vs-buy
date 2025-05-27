@@ -7,11 +7,11 @@ export interface GeneralInputs {
   annualIncomeGrowthRate: number;
   currentSavings: number;
   monthlyExpenses?: number; // Optional monthly expenses
+  downPaymentPercent: number;
 }
 
 export interface BuyingInputs {
   housePrice: number;
-  downPaymentPercent: number;
   interestRate: number;
   loanTerm: number;
   loanType: "fixed" | "adjustable";

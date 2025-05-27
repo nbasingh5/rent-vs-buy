@@ -19,8 +19,6 @@ export const calculateComparison = (formData: FormData): ComparisonResults => {
     investment,
   });
 
-  console.log("Buying Results: ", buyingResults);
-
   // --- Calculate Renting Scenario ---
   const { rentingResults } = calculateRentingYearlyData({
     general,

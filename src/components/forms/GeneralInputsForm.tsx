@@ -145,25 +145,30 @@ const GeneralInputsForm = ({
                 {validationError}
               </p>
             )}
+
+            <SliderInput
+              id="downPaymentPercent"
+              label="Down Payment"
+              min={0}
+              max={100}
+              step={1}
+              value={values.downPaymentPercent}
+              onChange={(downPaymentPercent) => onChange({ ...values, downPaymentPercent })}
+              valueDisplay={formData ? `${values.downPaymentPercent}% (${(formData.buying.housePrice * (values.downPaymentPercent / 100)).toLocaleString('en-US', { style: 'currency', currency: 'USD' })})` : `${values.downPaymentPercent}%`}
+              description="The down payment as a percentage of the house price"
+            />
             
             {formData && (
               <div className="text-sm text-muted-foreground mt-1">
-                <span>Required down payment: </span>
-                <span className="font-medium">
-                  ${(formData.buying.housePrice * (formData.buying.downPaymentPercent / 100)).toLocaleString()}
-                </span>
-                <span> ({formData.buying.downPaymentPercent}% of ${formData.buying.housePrice.toLocaleString()})</span>
-                <div className="mt-2">
-                  <a 
-                    href="/down-payment-calculator" 
-                    className="text-primary hover:text-primary/80 underline flex items-center"
-                  >
-                    <span>Need help saving for your down payment?</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1">
-                      <path d="M7 17l9.2-9.2M17 17V7H7" />
-                    </svg>
-                  </a>
-                </div>
+                <a 
+                  href="/down-payment-calculator" 
+                  className="text-primary hover:text-primary/80 underline flex items-center"
+                >
+                  <span>Need help saving for your down payment?</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1">
+                    <path d="M7 17l9.2-9.2M17 17V7H7" />
+                  </svg>
+                </a>
               </div>
             )}
           </div>

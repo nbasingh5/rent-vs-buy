@@ -19,9 +19,6 @@ const InvestmentInputsForm = ({ values, onChange }: InvestmentInputsFormProps) =
 
   return (
     <Card>
-      <CardHeader className="bg-investment/10">
-        <CardTitle className="text-investment-dark">Investment Settings</CardTitle>
-      </CardHeader>
       <CardContent className="pt-6">
         <div className="grid gap-6">
           <PercentageInput

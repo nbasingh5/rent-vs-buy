@@ -37,7 +37,7 @@ export const calculateBuyingYearlyData = ({
   const appreciationRate = getAppreciationRate(buying) / 100;
 
   // Initial values
-  const downPaymentAmount = buying.housePrice * (buying.downPaymentPercent / 100);
+  const downPaymentAmount = buying.housePrice * (general.downPaymentPercent / 100);
   const loanAmount = buying.housePrice - downPaymentAmount;
   const initialHomeValue = buying.housePrice;
 

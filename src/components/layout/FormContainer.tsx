@@ -90,9 +90,9 @@ const FormContainer: React.FC<FormContainerProps> = ({
       
       <div className="md:col-span-2 space-y-6">
         {/* Buying Section */}
-        <div>
+        <div className="bg-buy-light/20 border border-buy-light/40 rounded-lg p-4 shadow-sm">
           <div 
-            className="flex justify-between items-center cursor-pointer p-2 hover:bg-gray-50 rounded-md" 
+            className="flex justify-between items-center cursor-pointer p-2 hover:bg-buy-light/30 rounded-md transition-colors" 
             onClick={() => toggleSection('buying')}
           >
             <h2 className="text-xl font-semibold text-buy-dark">Buying Scenario</h2>
@@ -100,17 +100,19 @@ const FormContainer: React.FC<FormContainerProps> = ({
           </div>
           
           {showSections.buying && (
-            <BuyingInputsForm 
-              values={formData.buying} 
-              onChange={onBuyingChange}
-            />
+            <div className="mt-4">
+              <BuyingInputsForm 
+                values={formData.buying} 
+                onChange={onBuyingChange}
+              />
+            </div>
           )}
         </div>
         
         {/* Renting Section */}
-        <div>
+        <div className="bg-rent-light/20 border border-rent-light/40 rounded-lg p-4 shadow-sm">
           <div 
-            className="flex justify-between items-center cursor-pointer p-2 hover:bg-gray-50 rounded-md" 
+            className="flex justify-between items-center cursor-pointer p-2 hover:bg-rent-light/30 rounded-md transition-colors" 
             onClick={() => toggleSection('renting')}
           >
             <h2 className="text-xl font-semibold text-rent-dark">Renting Scenario</h2>
@@ -118,28 +120,32 @@ const FormContainer: React.FC<FormContainerProps> = ({
           </div>
           
           {showSections.renting && (
-            <RentingInputsForm 
-              values={formData.renting} 
-              onChange={onRentingChange}
-            />
+            <div className="mt-4">
+              <RentingInputsForm 
+                values={formData.renting} 
+                onChange={onRentingChange}
+              />
+            </div>
           )}
         </div>
         
         {/* Investment Section */}
-        <div>
+        <div className="bg-investment-light/20 border border-investment-light/40 rounded-lg p-4 shadow-sm">
           <div 
-            className="flex justify-between items-center cursor-pointer p-2 hover:bg-gray-50 rounded-md text-xl font-semibold text-investment-dark" 
+            className="flex justify-between items-center cursor-pointer p-2 hover:bg-investment-light/30 rounded-md transition-colors" 
             onClick={() => toggleSection('investment')}
           >
-            <h2 className="text-xl font-semibold">Investment Settings</h2>
+            <h2 className="text-xl font-semibold text-investment-dark">Investment Settings</h2>
             {showSections.investment ? <ChevronUp /> : <ChevronDown />}
           </div>
           
           {showSections.investment && (
-            <InvestmentInputsForm 
-              values={formData.investment} 
-              onChange={onInvestmentChange}
-            />
+            <div className="mt-4">
+              <InvestmentInputsForm 
+                values={formData.investment} 
+                onChange={onInvestmentChange}
+              />
+            </div>
           )}
         </div>
       </div>

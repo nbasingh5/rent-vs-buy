@@ -1,6 +1,8 @@
 
 import React from "react";
 import InfoCard from "@/components/layout/InfoCard";
+import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 
 const InfoCardSection: React.FC = () => {
   return (
@@ -16,6 +18,19 @@ const InfoCardSection: React.FC = () => {
         <li>Get a detailed year-by-year breakdown</li>
         <li>See visualizations of wealth growth</li>
       </ul>
+      
+      <div className="mt-4 p-3 bg-primary/10 rounded-md">
+        <p className="text-sm font-medium">
+          Prefer a guided experience? Try our step-by-step calculator:
+        </p>
+        <Link 
+          to="/step-by-step" 
+          className="mt-2 inline-flex items-center text-sm font-medium text-primary hover:text-primary/80"
+        >
+          Step-by-Step Calculator
+          <ArrowRight className="ml-1 h-4 w-4" />
+        </Link>
+      </div>
     </InfoCard>
   );
 };
