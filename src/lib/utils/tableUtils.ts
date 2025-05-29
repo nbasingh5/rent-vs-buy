@@ -1,7 +1,6 @@
 // Table utility functions for data transformation and display logic
 
 import { MonthlyTableData, YearlyTableData } from "../types/tableTypes";
-import { calculateMonthlyValue } from "./calculationEngine";
 
 /**
  * Generates monthly data based on yearly data

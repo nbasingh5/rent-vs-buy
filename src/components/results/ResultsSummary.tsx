@@ -76,6 +76,15 @@ const ResultsSummary = ({ results }: ResultsSummaryProps) => {
             </div>
           </div>
         </div>
+
+        <div className="mt-8 p-4 bg-muted rounded-md">
+          <p className="font-medium">
+            Total Investment Amount:
+          </p>
+          <p className="text-2xl font-bold mt-1 mb-2">
+            {formatCurrency(results.finalInvestmentAmount)}
+          </p>
+        </div>
       </CardContent>
     </Card>
   );

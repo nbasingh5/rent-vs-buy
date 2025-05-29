@@ -21,6 +21,8 @@ export interface BuyingInputs {
   usePercentageForMaintenance: boolean;
   appreciationScenario: "low" | "medium" | "high" | "custom";
   customAppreciationRate: number;
+  downPaymentPercent: number;
+  currentSavings: number;
 }
 
 export interface RentingInputs {
@@ -46,7 +48,6 @@ export interface MonthlyBuyingDataPoint {
   homeValue: number;
   homeEquity: number;
   loanBalance: number;
-  monthlyIncome: number;
   mortgagePayment: number;
   principalPayment: number;
   interestPayment: number;
@@ -55,25 +56,21 @@ export interface MonthlyBuyingDataPoint {
   maintenanceCosts: number;
   amountInvested: number;
   investmentEarnings: number;
-  yearlySavings: number; // Added field
+  yearlySavings: number;
   totalWealthBuying: number;
-  investmentsWithEarnings: number; // Added field
+  investmentsWithEarnings: number;
+  monthlyExpenses: number
 }
 
 export interface MonthlyRentingDataPoint {
   month: number;
-  monthlyIncome: number;
   rent: number;
   yearlySavings: number;
-  // Investment tracking
   amountInvested: number;
   investmentEarnings: number;
   investmentValueBeforeTax: number;
   capitalGainsTax: number;
   totalWealthRenting: number;
-  // Legacy fields (keeping for compatibility)
-  initialInvestment: number;
-  additionalContributions: number;
 }
 
 // Calculation Result Types
@@ -86,36 +83,30 @@ export interface YearlyBuyingResult {
   propertyTaxes: number;
   homeInsurance: number;
   maintenanceCosts: number;
-  monthlyExpenses: number;      // Added monthly expenses
   homeValue: number;
   homeEquity: number;
   totalWealthBuying: number;
-  yearlyIncome: number;
-  yearlySavings: number;        // Total leftover income during the year
-  amountInvested: number;         // Total amount put into investments (initial + contributions)
-  investmentEarnings: number;     // Earnings from investments during the year (after-tax)
-  investmentsWithEarnings: number; // End-of-year investment value (after-tax)
-  capitalGainsTaxPaid: number; // Capital gains tax on investment earnings
-  initialInvestment?: number; // Added to show initial investment
-  additionalContributions?: number; // Cumulative additional contributions up to this year
-  monthlyData?: MonthlyBuyingDataPoint[]; // Optional for backward compatibility
+  yearlySavings: number;        
+  amountInvested: number;         
+  investmentEarnings: number;     
+  investmentsWithEarnings: number;
+  capitalGainsTaxPaid: number; 
+  monthlyData?: MonthlyBuyingDataPoint[];
 }
 
 export interface YearlyRentingResult {
   year: number;
   totalRent: number;
-  monthlyExpenses: number;      // Added monthly expenses
-  amountInvested: number; // Total amount put into investments (initial + contributions)
+  yearlyExpenses: number;
+  amountInvested: number; 
   investmentValueBeforeTax: number;
   capitalGainsTaxPaid: number;
-  investmentEarnings: number;     // Earnings from investments during the year (after-tax)
+  investmentEarnings: number;
   totalWealthRenting: number;
-  yearlyIncome: number;
-  yearlySavings: number;        // Total leftover income during the year
-  investmentsWithEarnings: number; // Same as investmentValueAfterTax for consistency
-  initialInvestment?: number; // Added to show initial investment
-  additionalContributions?: number; // Cumulative additional contributions up to this year
-  monthlyData?: MonthlyRentingDataPoint[]; // Optional for backward compatibility
+  yearlySavings: number;       
+  investmentsWithEarnings: number; 
+  initialInvestment?: number;
+  monthlyData?: MonthlyRentingDataPoint[];
   annualReturnRate: number;
   capitalGainsTaxRate: number;
 }
@@ -127,7 +118,6 @@ export interface YearlyComparison {
   difference: number;
   cumulativeBuyingCosts: number;
   cumulativeRentingCosts: number;
-  yearlyIncome: number;
   buyingLeftoverIncome: number;
   rentingLeftoverIncome: number;
   buyingLeftoverInvestmentValue: number;
@@ -144,4 +134,5 @@ export interface ComparisonResults {
     difference: number;
     betterOption: "buying" | "renting" | "equal";
   };
+  finalInvestmentAmount: number;
 }

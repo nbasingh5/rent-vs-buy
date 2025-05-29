@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { BuyingInputs } from "@/lib/types";
+import { BuyingInputs, FormData } from "@/lib/types";
 import StepContainer from "./StepContainer";
 import CurrencyInput from "@/components/forms/CurrencyInput";
 import SliderInput from "@/components/forms/SliderInput";
@@ -8,11 +8,13 @@ import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 
 interface BuyingInputsStepProps {
   values: BuyingInputs;
   onChange: (values: BuyingInputs) => void;
+  formData: FormData;
+  validationError: string | null;
   onNext: () => void;
   onPrevious: () => void;
   canProceed: boolean;
@@ -22,11 +24,16 @@ interface BuyingInputsStepProps {
 const BuyingInputsStep: React.FC<BuyingInputsStepProps> = ({
   values,
   onChange,
+  formData,
+  validationError,
   onNext,
   onPrevious,
   canProceed,
   currentStep,
 }) => {
+  const hasSavingsError = validationError?.toLowerCase().includes('current savings');
+  console.log({validationError})
+  console.log({hasSavingsError})
   const handleHousePriceChange = (housePrice: number) => {
     onChange({ ...values, housePrice });
   };
@@ -73,18 +80,23 @@ const BuyingInputsStep: React.FC<BuyingInputsStepProps> = ({
     onChange({ ...values, customAppreciationRate });
   };
 
+  const handleCurrentSavingsChange = (currentSavings: number) => {
+    onChange({ ...values, currentSavings });
+  };
+
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
 
   return (
     <StepContainer
       currentStep={currentStep as any}
       totalSteps={4}
-      stepNumber={2}
+      stepNumber={1}
       title="Buying Scenario"
       description="Tell us about the home you're considering buying."
       onNext={onNext}
       onPrevious={onPrevious}
       canProceed={canProceed}
+      validationError={validationError}
     >
       <div className="space-y-6">
         {/* Main required inputs */}
@@ -96,11 +108,53 @@ const BuyingInputsStep: React.FC<BuyingInputsStepProps> = ({
           description="The purchase price of the home"
         />
 
+        <div className="space-y-2">
+          <CurrencyInput
+            id="currentSavings"
+            label={
+              <div className="flex items-center gap-2">
+                <span>Current Savings</span>
+                {hasSavingsError && (
+                  <AlertCircle className="h-4 w-4 text-red-500" />
+                )}
+              </div>
+            }
+            value={values.currentSavings}
+            onChange={handleCurrentSavingsChange}
+            description="Your total current savings"
+            className={hasSavingsError ? "border-red-300 focus-visible:ring-red-500" : ""}
+          />
 
+          <SliderInput
+            id="downPaymentPercent"
+            label="Down Payment"
+            min={0}
+            max={100}
+            step={1}
+            value={values.downPaymentPercent}
+            onChange={(downPaymentPercent) => onChange({ ...values, downPaymentPercent })}
+            valueDisplay={formData ? `${values.downPaymentPercent}% (${(formData.buying.housePrice * (values.downPaymentPercent / 100)).toLocaleString('en-US', { style: 'currency', currency: 'USD' })})` : `${values.downPaymentPercent}%`}
+            description="The down payment as a percentage of the house price"
+          />
+
+          {formData && (
+            <div className="text-sm text-muted-foreground mt-1">
+              <a
+                href="/down-payment-calculator"
+                className="text-primary hover:text-primary/80 underline flex items-center"
+              >
+                <span>Need help saving for your down payment?</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1">
+                  <path d="M7 17l9.2-9.2M17 17V7H7" />
+                </svg>
+              </a>
+            </div>
+          )}
+        </div>
         <Separator />
 
         {/* Advanced options toggle */}
-        <div 
+        <div
           className="flex justify-between items-center cursor-pointer p-2 hover:bg-gray-50 rounded-md"
           onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
         >

@@ -48,9 +48,8 @@ const ComparisonTable = ({ results }: ComparisonTableProps) => {
   // Define default columns with visibility and importance settings
   const defaultSummaryColumns: TableColumn<ComparisonTableData>[] = [
     { key: "year", label: "Year", isVisible: true, isImportant: true },
-    { key: "yearlyIncome", label: "Annual Income", isVisible: true, isImportant: true },
-    { key: "buyingLeftoverIncome", label: "Buying Leftover Income", isVisible: !isMobile, isImportant: false },
-    { key: "rentingLeftoverIncome", label: "Renting Leftover Income", isVisible: !isMobile, isImportant: false },
+    { key: "cumulativeBuyingCosts", label: "Buying Costs", isVisible: !isMobile, isImportant: false },
+    { key: "cumulativeRentingCosts", label: "Renting Costs", isVisible: !isMobile, isImportant: false },
     { key: "buyingLeftoverInvestmentValue", label: "Buying Investments", isVisible: !isMobile, isImportant: false },
     { key: "rentingLeftoverInvestmentValue", label: "Renting Investments", isVisible: !isMobile, isImportant: false },
     { key: "buyingWealth", label: "Buying Wealth", isVisible: true, isImportant: true },

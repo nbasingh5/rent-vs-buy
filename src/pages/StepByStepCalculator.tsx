@@ -38,13 +38,6 @@ const StepByStepCalculator = () => {
       <Header />
       
       <main className="flex-grow py-8 px-4 md:px-8 max-w-120rem mx-auto w-full">
-        {/* <div className="mb-12 text-center p-6 bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-white/20">
-          <h1 className="text-3xl font-bold mb-2">Rent vs. Buy Calculator</h1>
-          <p className="text-muted-foreground">
-            Compare the financial outcomes of renting versus buying a home
-          </p>
-        </div> */}
-        
         {currentStep === 'general' && (
           <GeneralInputsStep
             values={formData.general}
@@ -62,9 +55,11 @@ const StepByStepCalculator = () => {
           <BuyingInputsStep
             values={formData.buying}
             onChange={handleBuyingChange}
+            formData={formData}
+            validationError={validationError}
             onNext={goToNextStep}
             onPrevious={goToPreviousStep}
-            canProceed={true}
+            canProceed={canProceed}
             currentStep={currentStep}
           />
         )}

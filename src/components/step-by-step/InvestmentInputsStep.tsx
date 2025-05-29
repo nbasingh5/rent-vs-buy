@@ -40,13 +40,13 @@ const InvestmentInputsStep: React.FC<InvestmentInputsStepProps> = ({
     <StepContainer
       currentStep={currentStep as any}
       totalSteps={4}
-      stepNumber={4}
+      stepNumber={3}
       title="Investment Settings"
       description="Configure your investment assumptions for the comparison."
       onNext={onNext}
       onPrevious={onPrevious}
       canProceed={canProceed}
-      isLastStep={true}
+      // isLastStep={true}
     >
       <div className="space-y-6">
         {/* Main required input */}

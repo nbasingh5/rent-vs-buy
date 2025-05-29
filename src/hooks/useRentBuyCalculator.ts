@@ -25,6 +25,8 @@ const defaultBuying: BuyingInputs = {
   usePercentageForMaintenance: true,
   appreciationScenario: "medium",
   customAppreciationRate: 4,
+  currentSavings: 80000,
+  downPaymentPercent: 20,
 };
 
 const defaultRenting: RentingInputs = {
@@ -90,6 +92,12 @@ export const useRentBuyCalculator = () => {
   
   const handleBuyingChange = (buying: BuyingInputs) => {
     setFormData({ ...formData, buying });
+
+    validateSavingsForDownPayment(
+      buying.currentSavings,
+      formData.buying.housePrice,
+      buying.downPaymentPercent
+    );
   };
   
   const handleRentingChange = (renting: RentingInputs) => {

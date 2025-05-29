@@ -33,10 +33,6 @@ const GeneralInputsStep: React.FC<GeneralInputsStepProps> = ({
   const [isYearlyIncome, setIsYearlyIncome] = React.useState(false);
   const hasSavingsError = validationError?.toLowerCase().includes('current savings');
 
-  const handleTimeHorizonChange = (timeHorizon: number) => {
-    onChange({ ...values, timeHorizon });
-  };
-
   const handleIncomeChange = (income: number) => {
     const annualIncome = isYearlyIncome ? income : income * 12;
     onChange({ ...values, annualIncome });
@@ -63,27 +59,16 @@ const GeneralInputsStep: React.FC<GeneralInputsStepProps> = ({
     <StepContainer
       currentStep={currentStep as any}
       totalSteps={4}
-      stepNumber={1}
+      stepNumber={4}
       title="General Information"
       description="Let's start with some basic information about your financial situation."
       onNext={onNext}
       onPrevious={onPrevious}
       canProceed={canProceed}
       validationError={validationError}
+      isLastStep={true}
     >
       <div className="space-y-6">
-        {/* Main required inputs */}
-        <SliderInput
-          id="timeHorizon"
-          label="Time Horizon (Years)"
-          min={1}
-          max={30}
-          step={1}
-          value={values.timeHorizon}
-          onChange={handleTimeHorizonChange}
-          description="The number of years for the comparison"
-        />
-
         <div className="space-y-2">
           <CurrencyInput
             id="currentSavings"

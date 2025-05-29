@@ -37,7 +37,7 @@ const RentingInputsStep: React.FC<RentingInputsStepProps> = ({
     <StepContainer
       currentStep={currentStep as any}
       totalSteps={4}
-      stepNumber={3}
+      stepNumber={2}
       title="Renting Scenario"
       description="Tell us about your rental situation."
       onNext={onNext}

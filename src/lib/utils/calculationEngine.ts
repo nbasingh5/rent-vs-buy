@@ -4,6 +4,7 @@ import {
   FormData,
   YearlyComparison,
 } from "../types";
+import { calculateInvestmentReturnForMonth } from "./investmentUtils";
 import { calculateBuyingYearlyData } from "./buyingCalculator";
 import { calculateRentingYearlyData } from "./rentingCalculator";
 
@@ -13,16 +14,15 @@ export const calculateComparison = (formData: FormData): ComparisonResults => {
   const timeHorizonYears = general.timeHorizon;
 
   // --- Calculate Buying Scenario ---
-  const { buyingResults} = calculateBuyingYearlyData({
-    general,
+  const { buyingResults } = calculateBuyingYearlyData({
     buying,
     investment,
   });
 
   // --- Calculate Renting Scenario ---
   const { rentingResults } = calculateRentingYearlyData({
-    general,
     renting,
+    buying,
     investment
   });
 
@@ -30,23 +30,46 @@ export const calculateComparison = (formData: FormData): ComparisonResults => {
   const yearlyComparisons: YearlyComparison[] = [];
   let cumulativeBuyingCosts = 0;
   let cumulativeRentingCosts = 0;
+  let finalInvestmentAmount = 0;
 
   for (let year = 0; year <= timeHorizonYears; year++) {
     const buyingYearData = buyingResults[year];
     const rentingYearData = rentingResults[year];
 
-    // Calculate yearly costs (excluding principal for buying)
     const yearlyBuyingCosts = buyingYearData.interestPaid + 
+                              buyingYearData.principalPaid + 
                               buyingYearData.propertyTaxes + 
                               buyingYearData.homeInsurance + 
                               buyingYearData.maintenanceCosts;
-                              
-    const yearlyRentingCosts = rentingYearData.totalRent + (20 * 12); // Rent + estimated renters insurance
+
+    const yearlyRentingCosts = rentingYearData.yearlyExpenses
+
+    // Calculate monthly savings
+    const monthlyBuyingCosts = yearlyBuyingCosts / 12;
+    const monthlyRentingCosts = yearlyRentingCosts / 12;
+
+    let monthlySavings = 0;
+    let investmentAmount = buying.currentSavings;
+
+    if (monthlyBuyingCosts < monthlyRentingCosts) {
+      monthlySavings = monthlyRentingCosts - monthlyBuyingCosts;
+    } else {
+      monthlySavings = monthlyBuyingCosts - monthlyRentingCosts;
+    }
+
+    // Calculate investment return for the month
+    const monthlyInvestmentReturn = calculateInvestmentReturnForMonth(
+      investmentAmount,
+      investment.annualReturn / 100
+    );
+
+    // Add investment return to investment amount
+    investmentAmount += monthlyInvestmentReturn + monthlySavings;
 
     // Accumulate costs (only start accumulating from year 1)
     if (year > 0) {
-        cumulativeBuyingCosts += yearlyBuyingCosts;
-        cumulativeRentingCosts += yearlyRentingCosts;
+      cumulativeBuyingCosts += yearlyBuyingCosts;
+      cumulativeRentingCosts += yearlyRentingCosts;
     }
 
     // Use the wealth values directly from the results (they include tax for final year)
@@ -58,7 +81,7 @@ export const calculateComparison = (formData: FormData): ComparisonResults => {
       buyingWealth = buyingYearData.totalWealthBuying; // Should already include tax deduction
       rentingWealth = rentingYearData.totalWealthRenting; // Should already include tax deduction
     }
-    
+
     yearlyComparisons.push({
       year,
       buyingWealth,
@@ -66,12 +89,12 @@ export const calculateComparison = (formData: FormData): ComparisonResults => {
       difference: buyingWealth - rentingWealth,
       cumulativeBuyingCosts,
       cumulativeRentingCosts,
-      yearlyIncome: buyingYearData.yearlyIncome, // Assume income is the same
       buyingLeftoverIncome: buyingYearData.yearlySavings,
       rentingLeftoverIncome: rentingYearData.yearlySavings,
       buyingLeftoverInvestmentValue: buyingYearData.investmentsWithEarnings,
       rentingLeftoverInvestmentValue: rentingYearData.investmentsWithEarnings,
     });
+    finalInvestmentAmount = investmentAmount;
   }
 
   // --- Final Summary (FIXED) ---
@@ -93,7 +116,14 @@ export const calculateComparison = (formData: FormData): ComparisonResults => {
   // Ensure the values are valid numbers
   const validatedFinalBuyingWealth = isNaN(finalBuyingWealth) ? 0 : finalBuyingWealth;
   const validatedFinalRentingWealth = isNaN(finalRentingWealth) ? 0 : finalRentingWealth;
-  const validatedDifference = isNaN(difference) ? 0 :  Math.abs(difference); 
+  const validatedDifference = isNaN(difference) ? 0 : Math.abs(difference);
+
+  console.log({
+    yearlyComparisons,
+    buyingResults,
+    rentingResults
+  })
+
   return {
     yearlyComparisons,
     buyingResults,
@@ -104,27 +134,8 @@ export const calculateComparison = (formData: FormData): ComparisonResults => {
       difference: validatedDifference,
       betterOption,
     },
+    finalInvestmentAmount,
   };
-};
-
-/**
- * Helper function to estimate monthly accumulating values
- * This approximates growth throughout the year
- */
-export const calculateMonthlyValue = (yearEndValue?: number, month?: number, year?: number): number | undefined => {
-  if (!yearEndValue || !month || !year || year === 0) return yearEndValue;
-  
-  // For year 1, use a more accurate formula that accounts for initial investments
-  if (year === 1) {
-    const initialValue = yearEndValue / Math.pow(1.01, 12); // Approximate starting value
-    const monthlyGrowthRate = Math.pow(yearEndValue / initialValue, 1/12);
-    return initialValue * Math.pow(monthlyGrowthRate, month);
-  }
-  
-  // For other years, use a more accurate compounding formula
-  // instead of simple linear approximation
-  const monthlyGrowthRate = Math.pow(1.01, 1/12); // Approximate 1% monthly growth
-  return yearEndValue / Math.pow(monthlyGrowthRate, 12-month);
 };
 
 /**

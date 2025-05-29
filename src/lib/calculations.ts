@@ -26,7 +26,6 @@ export {
 // Export the main comparison engine and related calculations
 export { 
   calculateComparison, 
-  calculateMonthlyValue,
   calculateAbsoluteDifference
 } from "./utils/calculationEngine";
 
