@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { BuyingInputs, ComparisonResults, FormData, GeneralInputs, InvestmentInputs, RentingInputs } from "@/lib/types";
 import { calculateComparison } from "@/lib/calculations";
@@ -6,16 +5,17 @@ import { toast } from "@/components/ui/use-toast";
 
 // Default form values
 const defaultGeneral: GeneralInputs = {
-  timeHorizon: 30,
-  annualIncome: 72000,
+  useIncomeAndSavings: false,
+  annualIncome: 0,
   incomeIncrease: false,
   annualIncomeGrowthRate: 3,
-  currentSavings: 80000,
-  downPaymentPercent: 20,
+  currentSavings: 0,
+  monthlyExpenses: 0,
 };
 
 const defaultBuying: BuyingInputs = {
   housePrice: 400000,
+  downPaymentPercent: 20,
   interestRate: 6,
   loanTerm: 30,
   loanType: "fixed",
@@ -25,8 +25,6 @@ const defaultBuying: BuyingInputs = {
   usePercentageForMaintenance: true,
   appreciationScenario: "medium",
   customAppreciationRate: 4,
-  currentSavings: 80000,
-  downPaymentPercent: 20,
 };
 
 const defaultRenting: RentingInputs = {
@@ -54,24 +52,20 @@ export const useRentBuyCalculator = () => {
   // Validation state
   const [validationError, setValidationError] = useState<string | null>(null);
   
-  // Run initial validation on mount
-  useEffect(() => {
-    validateSavingsForDownPayment(
-      formData.general.currentSavings,
-      formData.buying.housePrice,
-      formData.general.downPaymentPercent
-    );
-  }, []);
-  
   // Validation function
   const validateSavingsForDownPayment = (
+    usePersonalSavings: boolean,
     currentSavings: number, 
     housePrice: number, 
     downPaymentPercent: number
   ) => {
-    const downPaymentAmount = housePrice * (downPaymentPercent / 100);
-    console.log(`Validating savings: currentSavings=${currentSavings}, housePrice=${housePrice}, downPaymentPercent=${downPaymentPercent}`);
+    // Only validate if user has opted into using their personal savings
+    if (!usePersonalSavings) {
+      setValidationError(null);
+      return;
+    }
     
+    const downPaymentAmount = housePrice * (downPaymentPercent / 100);
     if (currentSavings < downPaymentAmount) {
       setValidationError(`Your current savings ($${currentSavings.toLocaleString()}) are less than the required down payment ($${downPaymentAmount.toLocaleString()})`);
     } else {
@@ -79,25 +73,28 @@ export const useRentBuyCalculator = () => {
     }
   };
   
+  // Run validation whenever relevant fields change
+  useEffect(() => {
+    validateSavingsForDownPayment(
+      formData.general.useIncomeAndSavings,
+      formData.general.currentSavings,
+      formData.buying.housePrice,
+      formData.buying.downPaymentPercent
+    );
+  }, [
+    formData.general.useIncomeAndSavings, 
+    formData.general.currentSavings, 
+    formData.buying.housePrice, 
+    formData.buying.downPaymentPercent
+  ]);
+  
   // Form update handlers
   const handleGeneralChange = (general: GeneralInputs) => {
     setFormData({ ...formData, general });
-    // Validate if current savings changed
-    validateSavingsForDownPayment(
-      general.currentSavings,
-      formData.buying.housePrice,
-      general.downPaymentPercent
-    );
   };
   
   const handleBuyingChange = (buying: BuyingInputs) => {
     setFormData({ ...formData, buying });
-
-    validateSavingsForDownPayment(
-      buying.currentSavings,
-      formData.buying.housePrice,
-      buying.downPaymentPercent
-    );
   };
   
   const handleRentingChange = (renting: RentingInputs) => {
@@ -122,25 +119,17 @@ export const useRentBuyCalculator = () => {
   
   // Calculate results
   const handleCalculate = () => {
-    // Calculate down payment amount
-    const downPaymentAmount = formData.buying.housePrice * (formData.general.downPaymentPercent / 100);
-    
-    // Check if current savings are less than down payment
-    if (formData.general.currentSavings < downPaymentAmount) {
-      setValidationError(`Your current savings ($${formData.general.currentSavings.toLocaleString()}) are less than the required down payment ($${downPaymentAmount.toLocaleString()})`);
-      
-      // Show toast notification
-      toast({
-        title: "Insufficient Savings",
-        description: `You need at least $${downPaymentAmount.toLocaleString()} for the down payment.`,
-        variant: "destructive"
-      });
-      
-      return;
+    if (formData.general.useIncomeAndSavings) {
+      const downPaymentAmount = formData.buying.housePrice * (formData.buying.downPaymentPercent / 100);
+      if (formData.general.currentSavings < downPaymentAmount) {
+        toast({
+          title: "Insufficient Savings",
+          description: `You need at least $${downPaymentAmount.toLocaleString()} for the down payment.`,
+          variant: "destructive"
+        });
+        return;
+      }
     }
-    
-    // Clear any previous validation errors
-    setValidationError(null);
     
     // Proceed with calculation
     const calculationResults = calculateComparison(formData);

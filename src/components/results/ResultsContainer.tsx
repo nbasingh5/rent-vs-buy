@@ -1,7 +1,6 @@
-
 import React from "react";
 import { Separator } from "@/components/ui/separator";
-import { ComparisonResults } from "@/lib/types";
+import { ComparisonResults, FormData } from "@/lib/types";
 import ResultsSummary from "@/components/results/ResultsSummary";
 import ComparisonChart from "@/components/results/ComparisonChart";
 import CostsChart from "@/components/results/CostsChart";
@@ -9,9 +8,10 @@ import ComparisonTable from "@/components/results/ComparisonTable";
 
 interface ResultsContainerProps {
   results: ComparisonResults | null;
+  formData: FormData;
 }
 
-const ResultsContainer: React.FC<ResultsContainerProps> = ({ results }) => {
+const ResultsContainer: React.FC<ResultsContainerProps> = ({ results, formData }) => {
   if (!results) return null;
 
   return (
@@ -26,7 +26,7 @@ const ResultsContainer: React.FC<ResultsContainerProps> = ({ results }) => {
         <CostsChart results={results} />
       </div>
       
-      <ComparisonTable results={results} />
+      <ComparisonTable results={results} formData={formData} />
     </div>
   );
 };

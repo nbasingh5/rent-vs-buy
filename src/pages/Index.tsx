@@ -1,4 +1,3 @@
-
 import React from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -44,7 +43,7 @@ const Index = () => {
         
         {results && (
           <div className="p-6 bg-gradient-to-r from-white/80 to-slate-50/80 backdrop-blur-sm rounded-xl shadow-sm border border-white/20">
-            <ResultsContainer results={results} />
+            <ResultsContainer results={results} formData={formData} />
           </div>
         )}
       </main>

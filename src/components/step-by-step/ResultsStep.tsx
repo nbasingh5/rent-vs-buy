@@ -1,5 +1,5 @@
 import React from "react";
-import { ComparisonResults } from "@/lib/types";
+import { ComparisonResults, FormData } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Home, RefreshCw } from "lucide-react";
@@ -13,12 +13,14 @@ interface ResultsStepProps {
   results: ComparisonResults;
   onReset: () => void;
   onPrevious: () => void;
+  formData: FormData;
 }
 
 const ResultsStep: React.FC<ResultsStepProps> = ({
   results,
   onReset,
   onPrevious,
+  formData,
 }) => {
   const navigate = useNavigate();
 
@@ -39,7 +41,7 @@ const ResultsStep: React.FC<ResultsStepProps> = ({
             <CostsChart results={results} />
           </div>
 
-          <ComparisonTable results={results} />
+          <ComparisonTable results={results} formData={formData}/>
 
           <div className="flex flex-wrap justify-between mt-8 gap-4">
             <div className="flex gap-2">

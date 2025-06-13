@@ -11,7 +11,6 @@ export interface TableColumn<T> {
 // Monthly data types for tables
 export interface MonthlyTableData {
   month: number;
-  yearlyIncome: number;
   mortgagePayment?: number;
   principalPaid?: number;
   interestPaid?: number;
@@ -26,7 +25,6 @@ export interface MonthlyTableData {
   investmentsWithEarnings?: number;
   amountInvested: number;
   investmentEarnings: number;
-  yearlySavings: number;
   investmentValueBeforeTax?: number;
   capitalGainsTaxPaid?: number;
   totalWealthBuying: number;
@@ -36,7 +34,6 @@ export interface MonthlyTableData {
 // Yearly data types for tables
 export interface YearlyTableData {
   year: number;
-  yearlyIncome: number;
   mortgagePayment?: number;
   principalPaid?: number;
   interestPaid?: number;
@@ -45,7 +42,6 @@ export interface YearlyTableData {
   maintenanceCosts?: number;
   monthlyExpenses?: number;
   totalRent?: number;
-  yearlySavings: number;
   amountInvested: number;
   investmentEarnings: number;
   investmentsWithEarnings?: number;
@@ -53,12 +49,9 @@ export interface YearlyTableData {
   homeValue?: number;
   homeEquity?: number;
   totalWealthBuying: number;
-  initialInvestment?: number;
-  additionalContributions?: number;
+  totalWealthRenting: number;
   investmentValueBeforeTax?: number;
   capitalGainsTaxPaid?: number;
-  annualReturnRate?: number;
-  capitalGainsTaxRate?: number;
   monthlyData?: any[]; // Will be typed more specifically in components
 }
 
@@ -69,10 +62,6 @@ export interface ComparisonTableData extends YearlyTableData {
   difference: number;
   cumulativeBuyingCosts: number;
   cumulativeRentingCosts: number;
-  buyingLeftoverIncome: number;
-  rentingLeftoverIncome: number;
-  buyingLeftoverInvestmentValue: number;
-  rentingLeftoverInvestmentValue: number;
   betterOption?: React.ReactNode;
 }
 

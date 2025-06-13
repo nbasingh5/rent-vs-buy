@@ -8,6 +8,7 @@ import { FormDescription, FormItem } from "../ui/form";
 import { Switch } from "../ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
+import SliderInput from "./SliderInput";
 
 interface BuyingInputsFormProps {
   values: BuyingInputs;
@@ -64,8 +65,19 @@ const BuyingInputsForm = ({ values, onChange }: BuyingInputsFormProps) => {
               id="housePrice"
               label="House Price"
               value={values.housePrice}
-              onChange={handleHousePriceChange}
+              onChange={(housePrice) => onChange({ ...values, housePrice })}
               description="The estimated purchase price of the house"
+            />
+            <SliderInput
+              id="downPaymentPercent"
+              label="Down Payment"
+              min={0}
+              max={100}
+              step={1}
+              value={values.downPaymentPercent}
+              onChange={(downPaymentPercent) => onChange({ ...values, downPaymentPercent })}
+              valueDisplay={`${values.downPaymentPercent}% (${(values.housePrice * (values.downPaymentPercent / 100)).toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 })})`}
+              description="The down payment as a percentage of the house price"
             />
           </div>
 

@@ -1,140 +1,161 @@
-// src/lib/utils/calculationEngine.ts - Orchestrator
 import {
   ComparisonResults,
   FormData,
   YearlyComparison,
 } from "../types";
-import { calculateInvestmentReturnForMonth } from "./investmentUtils";
+import { calculateInvestmentReturnForMonth, calculateCapitalGainsTax } from "./investmentUtils";
 import { calculateBuyingYearlyData } from "./buyingCalculator";
 import { calculateRentingYearlyData } from "./rentingCalculator";
 
 // Main calculation function - orchestrates buying and renting calculations
 export const calculateComparison = (formData: FormData): ComparisonResults => {
   const { general, buying, renting, investment } = formData;
-  const timeHorizonYears = general.timeHorizon;
+  const timeHorizonYears = buying.loanTerm;
+  const timeHorizonMonths = timeHorizonYears * 12;
 
-  // --- Calculate Buying Scenario ---
-  const { buyingResults } = calculateBuyingYearlyData({
-    buying,
-    investment,
-  });
+  // --- Get Raw Scenario Data (costs and equity only) ---
+  const { buyingResults } = calculateBuyingYearlyData({ buying, investment });
+  const { rentingResults } = calculateRentingYearlyData({ renting, loanTerm: buying.loanTerm });
 
-  // --- Calculate Renting Scenario ---
-  const { rentingResults } = calculateRentingYearlyData({
-    renting,
-    buying,
-    investment
-  });
+  // --- Initialize Investment & Wealth Tracking ---
+  const downPaymentAmount = buying.housePrice * (buying.downPaymentPercent / 100);
+  
+  let buyingInvestmentValue = 0;
+  let rentingInvestmentValue = 0;
 
-  // --- Combine Results and Calculate Comparisons ---
+  // Set initial investment values based on the calculation mode
+  if (general.useIncomeAndSavings) {
+    // Personalized Mode: Buying invests leftover savings; Renting invests ALL savings.
+    buyingInvestmentValue = Math.max(0, general.currentSavings - downPaymentAmount);
+    rentingInvestmentValue = general.currentSavings;
+  } else {
+    // Simple Mode: Assume only capital is the down payment.
+    buyingInvestmentValue = 0; // No leftover savings to invest when buying.
+    rentingInvestmentValue = downPaymentAmount; // The down payment is invested instead.
+  }
+
+  let buyingTotalContributions = buyingInvestmentValue;
+  let rentingTotalContributions = rentingInvestmentValue;
+
+  // --- Monthly Simulation Loop ---
+  for (let month = 1; month <= timeHorizonMonths; month++) {
+    const year = Math.ceil(month / 12);
+    const monthIndex = (month - 1) % 12;
+
+    const buyingMonthRaw = buyingResults[year].monthlyData[monthIndex];
+    const rentingMonthRaw = rentingResults[year].monthlyData[monthIndex];
+
+    // 1. Grow existing investments
+    const buyingReturn = calculateInvestmentReturnForMonth(buyingInvestmentValue, investment.annualReturn);
+    buyingInvestmentValue += buyingReturn;
+    
+    const rentingReturn = calculateInvestmentReturnForMonth(rentingInvestmentValue, investment.annualReturn);
+    rentingInvestmentValue += rentingReturn;
+
+    // 2. Determine monthly savings and invest them
+    const buyingMonthlyExpense = buyingMonthRaw.monthlyExpenses;
+    const rentingMonthlyExpense = rentingMonthRaw.rent;
+    const savings = Math.abs(buyingMonthlyExpense - rentingMonthlyExpense);
+
+    if (buyingMonthlyExpense < rentingMonthlyExpense) {
+      buyingInvestmentValue += savings;
+      buyingTotalContributions += savings;
+    } else {
+      rentingInvestmentValue += savings;
+      rentingTotalContributions += savings;
+    }
+
+    // 3. Update monthly data points with new investment values
+    const buyingMonthFinal = buyingResults[year].monthlyData[monthIndex];
+    buyingMonthFinal.amountInvested = buyingTotalContributions;
+    buyingMonthFinal.investmentEarnings = buyingInvestmentValue - buyingTotalContributions;
+    buyingMonthFinal.investmentsWithEarnings = buyingInvestmentValue;
+    buyingMonthFinal.totalWealthBuying = buyingMonthFinal.homeEquity + buyingInvestmentValue;
+
+    const rentingMonthFinal = rentingResults[year].monthlyData[monthIndex];
+    rentingMonthFinal.amountInvested = rentingTotalContributions;
+    rentingMonthFinal.investmentEarnings = rentingInvestmentValue - rentingTotalContributions;
+    rentingMonthFinal.investmentsWithEarnings = rentingInvestmentValue;
+    rentingMonthFinal.totalWealthRenting = rentingInvestmentValue;
+  }
+
+  // --- Aggregate Monthly Data to Yearly Results & Handle Taxes ---
   const yearlyComparisons: YearlyComparison[] = [];
-  let cumulativeBuyingCosts = 0;
-  let cumulativeRentingCosts = 0;
-  let finalInvestmentAmount = 0;
 
   for (let year = 0; year <= timeHorizonYears; year++) {
-    const buyingYearData = buyingResults[year];
-    const rentingYearData = rentingResults[year];
+    if (year === 0) {
+      const initialBuyingEquity = buyingResults[0].homeEquity;
+      buyingResults[0].totalWealthBuying = initialBuyingEquity + buyingInvestmentValue;
+      rentingResults[0].totalWealthRenting = rentingInvestmentValue;
+      buyingResults[0].investmentsWithEarnings = buyingInvestmentValue;
+      buyingResults[0].amountInvested = buyingInvestmentValue;
+      rentingResults[0].investmentsWithEarnings = rentingInvestmentValue;
+      rentingResults[0].amountInvested = rentingInvestmentValue;
 
-    const yearlyBuyingCosts = buyingYearData.interestPaid + 
-                              buyingYearData.principalPaid + 
-                              buyingYearData.propertyTaxes + 
-                              buyingYearData.homeInsurance + 
-                              buyingYearData.maintenanceCosts;
-
-    const yearlyRentingCosts = rentingYearData.yearlyExpenses
-
-    // Calculate monthly savings
-    const monthlyBuyingCosts = yearlyBuyingCosts / 12;
-    const monthlyRentingCosts = yearlyRentingCosts / 12;
-
-    let monthlySavings = 0;
-    let investmentAmount = buying.currentSavings;
-
-    if (monthlyBuyingCosts < monthlyRentingCosts) {
-      monthlySavings = monthlyRentingCosts - monthlyBuyingCosts;
-    } else {
-      monthlySavings = monthlyBuyingCosts - monthlyRentingCosts;
+       yearlyComparisons.push({
+        year: 0,
+        buyingWealth: buyingResults[0].totalWealthBuying,
+        rentingWealth: rentingResults[0].totalWealthRenting,
+        difference: buyingResults[0].totalWealthBuying - rentingResults[0].totalWealthRenting,
+        cumulativeBuyingCosts: 0,
+        cumulativeRentingCosts: 0,
+      });
+      continue;
     }
+    
+    const lastMonthOfYear = buyingResults[year].monthlyData[11];
+    const buyingYear = buyingResults[year];
+    buyingYear.investmentsWithEarnings = lastMonthOfYear.investmentsWithEarnings;
+    buyingYear.investmentEarnings = lastMonthOfYear.investmentEarnings;
+    buyingYear.amountInvested = lastMonthOfYear.amountInvested;
+    buyingYear.totalWealthBuying = lastMonthOfYear.totalWealthBuying;
 
-    // Calculate investment return for the month
-    const monthlyInvestmentReturn = calculateInvestmentReturnForMonth(
-      investmentAmount,
-      investment.annualReturn / 100
-    );
+    const lastRentingMonth = rentingResults[year].monthlyData[11];
+    const rentingYear = rentingResults[year];
+    rentingYear.investmentsWithEarnings = lastRentingMonth.investmentsWithEarnings;
+    rentingYear.investmentEarnings = lastRentingMonth.investmentEarnings;
+    rentingYear.amountInvested = lastRentingMonth.amountInvested;
+    rentingYear.totalWealthRenting = lastRentingMonth.totalWealthRenting;
 
-    // Add investment return to investment amount
-    investmentAmount += monthlyInvestmentReturn + monthlySavings;
-
-    // Accumulate costs (only start accumulating from year 1)
-    if (year > 0) {
-      cumulativeBuyingCosts += yearlyBuyingCosts;
-      cumulativeRentingCosts += yearlyRentingCosts;
-    }
-
-    // Use the wealth values directly from the results (they include tax for final year)
-    let buyingWealth = buyingYearData.totalWealthBuying;
-    let rentingWealth = rentingYearData.totalWealthRenting;
-
-    // For the final year, ensure we're using after-tax values
+    // Apply capital gains tax only in the final year of the horizon
     if (year === timeHorizonYears) {
-      buyingWealth = buyingYearData.totalWealthBuying; // Should already include tax deduction
-      rentingWealth = rentingYearData.totalWealthRenting; // Should already include tax deduction
+      const buyingTax = calculateCapitalGainsTax(buyingYear.investmentEarnings, investment.capitalGainsTaxRate);
+      buyingYear.capitalGainsTaxPaid = buyingTax;
+      buyingYear.totalWealthBuying -= buyingTax;
+
+      const rentingTax = calculateCapitalGainsTax(rentingYear.investmentEarnings, investment.capitalGainsTaxRate);
+      rentingYear.capitalGainsTaxPaid = rentingTax;
+      rentingYear.totalWealthRenting -= rentingTax;
     }
+
+    const prevComparison = yearlyComparisons[year - 1];
+    const cumulativeBuyingCosts = prevComparison.cumulativeBuyingCosts + buyingYear.mortgagePayment + buyingYear.propertyTaxes + buyingYear.homeInsurance + buyingYear.maintenanceCosts;
+    const cumulativeRentingCosts = prevComparison.cumulativeRentingCosts + rentingYear.totalRent;
 
     yearlyComparisons.push({
       year,
-      buyingWealth,
-      rentingWealth,
-      difference: buyingWealth - rentingWealth,
+      buyingWealth: buyingYear.totalWealthBuying,
+      rentingWealth: rentingYear.totalWealthRenting,
+      difference: buyingYear.totalWealthBuying - rentingYear.totalWealthRenting,
       cumulativeBuyingCosts,
       cumulativeRentingCosts,
-      buyingLeftoverIncome: buyingYearData.yearlySavings,
-      rentingLeftoverIncome: rentingYearData.yearlySavings,
-      buyingLeftoverInvestmentValue: buyingYearData.investmentsWithEarnings,
-      rentingLeftoverInvestmentValue: rentingYearData.investmentsWithEarnings,
     });
-    finalInvestmentAmount = investmentAmount;
   }
 
-  // --- Final Summary (FIXED) ---
-  // Make sure we're using the final year's wealth AFTER taxes
-  const finalBuyingWealth = buyingResults[timeHorizonYears].totalWealthBuying; // Already includes tax
-  const finalRentingWealth = rentingResults[timeHorizonYears].totalWealthRenting; // Already includes tax
-  const difference = finalBuyingWealth - finalRentingWealth;
-
-  // Determine better option with reasonable threshold
-  let betterOption: "buying" | "renting" | "equal" = "equal";
-  const wealthThreshold = Math.max(finalBuyingWealth, finalRentingWealth) * 0.01; // 1% difference threshold
-
-  if (difference > wealthThreshold) {
-    betterOption = "buying";
-  } else if (difference < -wealthThreshold) {
-    betterOption = "renting";
-  }
-
-  // Ensure the values are valid numbers
-  const validatedFinalBuyingWealth = isNaN(finalBuyingWealth) ? 0 : finalBuyingWealth;
-  const validatedFinalRentingWealth = isNaN(finalRentingWealth) ? 0 : finalRentingWealth;
-  const validatedDifference = isNaN(difference) ? 0 : Math.abs(difference);
-
-  console.log({
-    yearlyComparisons,
-    buyingResults,
-    rentingResults
-  })
+  // --- Final Summary ---
+  const finalComparison = yearlyComparisons[timeHorizonYears];
+  const betterOption = finalComparison.difference > 0 ? "buying" : finalComparison.difference < 0 ? "renting" : "equal";
 
   return {
     yearlyComparisons,
     buyingResults,
     rentingResults,
     summary: {
-      finalBuyingWealth: validatedFinalBuyingWealth,
-      finalRentingWealth: validatedFinalRentingWealth,
-      difference: validatedDifference,
+      finalBuyingWealth: finalComparison.buyingWealth,
+      finalRentingWealth: finalComparison.rentingWealth,
+      difference: Math.abs(finalComparison.difference),
       betterOption,
     },
-    finalInvestmentAmount,
   };
 };
 

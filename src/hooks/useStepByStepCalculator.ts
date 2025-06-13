@@ -5,16 +5,17 @@ import { toast } from "@/components/ui/use-toast";
 
 // Default form values
 const defaultGeneral: GeneralInputs = {
-  timeHorizon: 30,
-  annualIncome: 72000,
+  useIncomeAndSavings: false,
+  annualIncome: 0,
   incomeIncrease: false,
   annualIncomeGrowthRate: 3,
-  currentSavings: 80000,
-  downPaymentPercent: 20,
+  currentSavings: 0,
+  monthlyExpenses: 0,
 };
 
 const defaultBuying: BuyingInputs = {
   housePrice: 400000,
+  downPaymentPercent: 20,
   interestRate: 6,
   loanTerm: 30,
   loanType: "fixed",
@@ -24,8 +25,6 @@ const defaultBuying: BuyingInputs = {
   usePercentageForMaintenance: true,
   appreciationScenario: "medium",
   customAppreciationRate: 4,
-  currentSavings: 80000,
-  downPaymentPercent: 20,
 };
 
 const defaultRenting: RentingInputs = {
@@ -58,21 +57,17 @@ export const useStepByStepCalculator = () => {
   // Validation state
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  // Run initial validation on mount
-  useEffect(() => {
-    validateSavingsForDownPayment(
-      formData.buying.currentSavings,
-      formData.buying.housePrice,
-      formData.buying.downPaymentPercent
-    );
-  }, []);
-
   // Validation function
   const validateSavingsForDownPayment = (
+    usePersonalSavings: boolean,
     currentSavings: number,
     housePrice: number,
     downPaymentPercent: number
   ) => {
+    if (!usePersonalSavings) {
+      setValidationError(null);
+      return true;
+    }
     const downPaymentAmount = housePrice * (downPaymentPercent / 100);
     if (currentSavings < downPaymentAmount) {
       setValidationError(`Your current savings ($${currentSavings.toLocaleString()}) are less than the required down payment ($${downPaymentAmount.toLocaleString()})`);
@@ -82,34 +77,29 @@ export const useStepByStepCalculator = () => {
       return true;
     }
   };
+  
+  // Run validation whenever relevant fields change
+  useEffect(() => {
+    validateSavingsForDownPayment(
+      formData.general.useIncomeAndSavings,
+      formData.general.currentSavings,
+      formData.buying.housePrice,
+      formData.buying.downPaymentPercent
+    );
+  }, [
+    formData.general.useIncomeAndSavings,
+    formData.general.currentSavings,
+    formData.buying.housePrice,
+    formData.buying.downPaymentPercent
+  ]);
 
   // Form update handlers
   const handleGeneralChange = (general: GeneralInputs) => {
     setFormData({ ...formData, general });
-
-    // Validate if current savings or down payment percent changed
-    if (general.currentSavings !== formData.general.currentSavings ||
-      general.downPaymentPercent !== formData.general.downPaymentPercent) {
-      validateSavingsForDownPayment(
-        general.currentSavings,
-        formData.buying.housePrice,
-        general.downPaymentPercent
-      );
-    }
   };
 
   const handleBuyingChange = (buying: BuyingInputs) => {
     setFormData({ ...formData, buying });
-
-    // Validate if house price or down payment percent changed
-    if (buying.currentSavings !== formData.general.currentSavings ||
-      buying.downPaymentPercent !== formData.general.downPaymentPercent) {
-      validateSavingsForDownPayment(
-        buying.currentSavings,
-        formData.buying.housePrice,
-        buying.downPaymentPercent
-      );
-    }
   };
 
   const handleRentingChange = (renting: RentingInputs) => {
@@ -135,21 +125,16 @@ export const useStepByStepCalculator = () => {
 
   // Calculate results
   const handleCalculate = () => {
-    // Calculate down payment amount
-    const downPaymentAmount = formData.buying.housePrice * (formData.general.downPaymentPercent / 100);
-
-    // Check if current savings are less than down payment
-    if (formData.general.currentSavings < downPaymentAmount) {
-      setValidationError(`Your current savings ($${formData.general.currentSavings.toLocaleString()}) are less than the required down payment ($${downPaymentAmount.toLocaleString()})`);
-
-      // Show toast notification
-      toast({
-        title: "Insufficient Savings",
-        description: `You need at least $${downPaymentAmount.toLocaleString()} for the down payment.`,
-        variant: "destructive"
-      });
-
-      return;
+    if (formData.general.useIncomeAndSavings) {
+      const downPaymentAmount = formData.buying.housePrice * (formData.buying.downPaymentPercent / 100);
+      if (formData.general.currentSavings < downPaymentAmount) {
+        toast({
+          title: "Insufficient Savings",
+          description: `You need at least $${downPaymentAmount.toLocaleString()} for the down payment.`,
+          variant: "destructive"
+        });
+        return;
+      }
     }
 
     // Clear any previous validation errors
@@ -165,7 +150,6 @@ export const useStepByStepCalculator = () => {
 
   // Navigation functions
   const goToNextStep = () => {
-    console.log
     switch (currentStep) {
       case 'buying':
         setCurrentStep('renting');
@@ -187,7 +171,7 @@ export const useStepByStepCalculator = () => {
   const goToPreviousStep = () => {
     switch (currentStep) {
       case 'buying':
-        setCurrentStep('general');
+        // No previous step from buying in this flow
         break;
       case 'renting':
         setCurrentStep('buying');
@@ -212,21 +196,13 @@ export const useStepByStepCalculator = () => {
 
   // Check if can proceed to next step
   const canProceedToNextStep = (): boolean => {
-    if (currentStep === 'general') {
-      return validateSavingsForDownPayment(
-        formData.general.currentSavings,
-        formData.buying.housePrice,
-        formData.general.downPaymentPercent
-      );
-    }
-    if (currentStep === 'buying') {
-      return validateSavingsForDownPayment(
-        formData.buying.currentSavings,
-        formData.buying.housePrice,
-        formData.buying.downPaymentPercent
-      );
-    }
-    return true;
+    const { general, buying } = formData;
+    return validateSavingsForDownPayment(
+      general.useIncomeAndSavings,
+      general.currentSavings,
+      buying.housePrice,
+      buying.downPaymentPercent
+    );
   };
   
   return {

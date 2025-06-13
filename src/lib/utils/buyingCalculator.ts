@@ -13,7 +13,6 @@ import {
   calculateMonthlyHomeInsurance,
   calculateMonthlyMaintenanceCosts,
 } from "./propertyCostUtils";
-import { calculateCapitalGainsTax } from "./investmentUtils";
 
 interface BuyingCalculationInputs {
   buying: BuyingInputs;
@@ -40,7 +39,6 @@ export const calculateBuyingYearlyData = ({
 
   // Initialize tracking variables
   let currentHomeValue = initialHomeValue;
-  let initialInvestment = Math.max(0, buying.currentSavings - downPaymentAmount);
 
   // --- Year 0 Setup ---
   monthlyBuyingData[0] = [];
@@ -56,54 +54,54 @@ export const calculateBuyingYearlyData = ({
       propertyTaxes: 0,
       homeInsurance: 0,
       maintenanceCosts: 0,
-      amountInvested: initialInvestment,
+      // Investment fields will be populated by the engine
+      amountInvested: 0,
       investmentEarnings: 0,
-      yearlySavings: 0,
-      investmentsWithEarnings: initialInvestment, 
-      totalWealthBuying: downPaymentAmount + initialInvestment,
+      investmentsWithEarnings: 0, 
+      totalWealthBuying: 0,
       monthlyExpenses: 0
     });
   }
 
     buyingResults.push({
       year: 0,
-      mortgagePayment: 0,
-      principalPaid: downPaymentAmount,
-      interestPaid: 0,
+      homeValue: initialHomeValue,
+      homeEquity: downPaymentAmount,
       loanBalance: loanAmount,
+      // All other values are 0 for year 0, will be calculated by engine
+      mortgagePayment: 0,
+      principalPaid: 0,
+      interestPaid: 0,
       propertyTaxes: 0,
       homeInsurance: 0,
       maintenanceCosts: 0,
-      homeValue: initialHomeValue,
-      homeEquity: downPaymentAmount,
-      totalWealthBuying: downPaymentAmount + initialInvestment,
-      yearlySavings: 0,
-      investmentsWithEarnings: initialInvestment,
-      amountInvested: initialInvestment,
+      totalWealthBuying: 0,
+      amountInvested: 0,
       investmentEarnings: 0,
+      investmentsWithEarnings: 0,
+      capitalGainsTaxPaid: 0, 
       monthlyData: monthlyBuyingData[0],
-      capitalGainsTaxPaid: 0,
     });
   // --- End Year 0 Setup ---
 
   // Calculate for each year
   for (let year = 1; year <= buying.loanTerm; year++) {
     monthlyBuyingData[year] = [];
-    let yearlyMortgagePayment = 0;
     let yearlyPrincipalPaid = 0;
     let yearlyInterestPaid = 0;
     let yearlyPropertyTaxes = 0;
     let yearlyHomeInsurance = 0;
     let yearlyMaintenanceCosts = 0;
-    let yearlyLeftoverIncome = 0;
 
-    // Get previous year's data
-    const previousYear = buyingResults[year - 1];
-    let currentHomeEquity = previousYear.homeEquity;
-    let investmentsWithEarnings = previousYear.investmentsWithEarnings;
+    // Get previous year's data to carry over values
+    let currentHomeEquity = buyingResults[year - 1].homeEquity;
 
     for (let month = 1; month <= 12; month++) {
       const globalMonthNumber = (year - 1) * 12 + month;
+
+      // Apply monthly home appreciation before calculating new costs
+      const monthlyAppreciationRate = Math.pow(1 + appreciationRate, 1 / 12) - 1;
+      currentHomeValue *= (1 + monthlyAppreciationRate);
 
       const { principalPayment, interestPayment, remainingBalance } =
         calculateMortgageAmortizationForMonth(
@@ -127,27 +125,21 @@ export const calculateBuyingYearlyData = ({
         buying.usePercentageForMaintenance
       );
 
-      // Calculate monthly mortgage payment (principal + interest)
       const mortgagePayment = principalPayment + interestPayment;
 
       const monthlyExpenses = 
         mortgagePayment + 
         monthlyPropertyTaxes +
         monthlyHomeInsurance +
-        monthlyMaintenanceCosts
+        monthlyMaintenanceCosts;
 
       // Track yearly totals
-      yearlyMortgagePayment += mortgagePayment;
       yearlyPrincipalPaid += principalPayment;
       yearlyInterestPaid += interestPayment;
       yearlyPropertyTaxes += monthlyPropertyTaxes;
       yearlyHomeInsurance += monthlyHomeInsurance;
       yearlyMaintenanceCosts += monthlyMaintenanceCosts;
       
-      // Apply monthly home appreciation
-      const monthlyAppreciationRate = Math.pow(1 + appreciationRate, 1 / 12) - 1;
-      currentHomeValue *= 1 + monthlyAppreciationRate;
-
       currentHomeEquity = currentHomeValue - remainingBalance;
 
       // Store monthly data point 
@@ -162,20 +154,18 @@ export const calculateBuyingYearlyData = ({
         propertyTaxes: monthlyPropertyTaxes,
         homeInsurance: monthlyHomeInsurance,
         maintenanceCosts: monthlyMaintenanceCosts,
+        monthlyExpenses,
+        // Investment values to be populated later
         amountInvested: 0,
         investmentEarnings: 0,
-        investmentsWithEarnings,
-        yearlySavings: 0,
-        totalWealthBuying: currentHomeEquity + investmentsWithEarnings,
-        monthlyExpenses
+        investmentsWithEarnings: 0,
+        totalWealthBuying: 0,
       });
     } // End monthly loop
 
-    const totalWealth = currentHomeEquity + investmentsWithEarnings;
     // Add year results
     buyingResults.push({
       year,
-      mortgagePayment: yearlyMortgagePayment,
       principalPaid: yearlyPrincipalPaid,
       interestPaid: yearlyInterestPaid,
       loanBalance: monthlyBuyingData[year][11].loanBalance,
@@ -184,13 +174,14 @@ export const calculateBuyingYearlyData = ({
       maintenanceCosts: yearlyMaintenanceCosts,
       homeValue: currentHomeValue,
       homeEquity: currentHomeEquity,
-      totalWealthBuying: totalWealth,
-      yearlySavings: yearlyLeftoverIncome,
-      investmentsWithEarnings,
+      // Investment values to be populated later
+      mortgagePayment: yearlyPrincipalPaid + yearlyInterestPaid,
+      totalWealthBuying: 0,
       amountInvested: 0,
       investmentEarnings: 0,
-      monthlyData: monthlyBuyingData[year],
+      investmentsWithEarnings: 0,
       capitalGainsTaxPaid: 0,
+      monthlyData: monthlyBuyingData[year],
     });
   } // End yearly loop
 

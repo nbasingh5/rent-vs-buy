@@ -1,17 +1,17 @@
-// src/lib/types.ts - Updated with monthly data tracking and investment details
-// Form Input Types
+// src/lib/types.ts
+
 export interface GeneralInputs {
-  timeHorizon: number;
-  annualIncome: number;
+  useIncomeAndSavings: boolean;
+  annualIncome?: number;
   incomeIncrease: boolean;
   annualIncomeGrowthRate: number;
-  currentSavings: number;
-  monthlyExpenses?: number; // Optional monthly expenses
-  downPaymentPercent: number;
+  currentSavings: number; // Lives here exclusively
+  monthlyExpenses?: number;
 }
 
 export interface BuyingInputs {
   housePrice: number;
+  downPaymentPercent: number; // Lives here exclusively
   interestRate: number;
   loanTerm: number;
   loanType: "fixed" | "adjustable";
@@ -21,8 +21,6 @@ export interface BuyingInputs {
   usePercentageForMaintenance: boolean;
   appreciationScenario: "low" | "medium" | "high" | "custom";
   customAppreciationRate: number;
-  downPaymentPercent: number;
-  currentSavings: number;
 }
 
 export interface RentingInputs {
@@ -56,19 +54,17 @@ export interface MonthlyBuyingDataPoint {
   maintenanceCosts: number;
   amountInvested: number;
   investmentEarnings: number;
-  yearlySavings: number;
-  totalWealthBuying: number;
   investmentsWithEarnings: number;
+  totalWealthBuying: number;
   monthlyExpenses: number
 }
 
 export interface MonthlyRentingDataPoint {
   month: number;
   rent: number;
-  yearlySavings: number;
   amountInvested: number;
   investmentEarnings: number;
-  investmentValueBeforeTax: number;
+  investmentsWithEarnings: number;
   capitalGainsTax: number;
   totalWealthRenting: number;
 }
@@ -86,29 +82,22 @@ export interface YearlyBuyingResult {
   homeValue: number;
   homeEquity: number;
   totalWealthBuying: number;
-  yearlySavings: number;        
   amountInvested: number;         
   investmentEarnings: number;     
   investmentsWithEarnings: number;
   capitalGainsTaxPaid: number; 
-  monthlyData?: MonthlyBuyingDataPoint[];
+  monthlyData: MonthlyBuyingDataPoint[];
 }
 
 export interface YearlyRentingResult {
   year: number;
   totalRent: number;
-  yearlyExpenses: number;
   amountInvested: number; 
-  investmentValueBeforeTax: number;
-  capitalGainsTaxPaid: number;
   investmentEarnings: number;
-  totalWealthRenting: number;
-  yearlySavings: number;       
   investmentsWithEarnings: number; 
-  initialInvestment?: number;
-  monthlyData?: MonthlyRentingDataPoint[];
-  annualReturnRate: number;
-  capitalGainsTaxRate: number;
+  capitalGainsTaxPaid: number;
+  totalWealthRenting: number;
+  monthlyData: MonthlyRentingDataPoint[];
 }
 
 export interface YearlyComparison {
@@ -118,10 +107,6 @@ export interface YearlyComparison {
   difference: number;
   cumulativeBuyingCosts: number;
   cumulativeRentingCosts: number;
-  buyingLeftoverIncome: number;
-  rentingLeftoverIncome: number;
-  buyingLeftoverInvestmentValue: number;
-  rentingLeftoverInvestmentValue: number;
 }
 
 export interface ComparisonResults {
@@ -134,5 +119,4 @@ export interface ComparisonResults {
     difference: number;
     betterOption: "buying" | "renting" | "equal";
   };
-  finalInvestmentAmount: number;
 }

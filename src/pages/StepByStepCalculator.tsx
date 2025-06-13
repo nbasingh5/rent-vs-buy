@@ -7,6 +7,7 @@ import BuyingInputsStep from "@/components/step-by-step/BuyingInputsStep";
 import RentingInputsStep from "@/components/step-by-step/RentingInputsStep";
 import InvestmentInputsStep from "@/components/step-by-step/InvestmentInputsStep";
 import ResultsStep from "@/components/step-by-step/ResultsStep";
+import { FormData } from "@/lib/types";
 
 const StepByStepCalculator = () => {
   const {
@@ -28,8 +29,9 @@ const StepByStepCalculator = () => {
   // Memoize the canProceed value to prevent infinite renders
   const canProceed = useMemo(() => canProceedToNextStep(), [
     formData.general.currentSavings,
+    formData.general.useIncomeAndSavings,
     formData.buying.housePrice,
-    formData.general.downPaymentPercent,
+    formData.buying.downPaymentPercent,
     validationError
   ]);
 
@@ -91,6 +93,7 @@ const StepByStepCalculator = () => {
             results={results}
             onReset={handleReset}
             onPrevious={goToPreviousStep}
+            formData={formData}
           />
         )}
       </main>

@@ -1,4 +1,4 @@
-import { ComparisonResults } from "@/lib/types";
+import { ComparisonResults, FormData } from "@/lib/types";
 import { TableColumn, ComparisonTableData, YearlyTableData } from "@/lib/types/tableTypes";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
@@ -9,9 +9,10 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ComparisonTableProps {
   results: ComparisonResults | null;
+  formData: FormData;
 }
 
-const ComparisonTable = ({ results }: ComparisonTableProps) => {
+const ComparisonTable = ({ results, formData }: ComparisonTableProps) => {
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
   const [summaryColumnsState, setSummaryColumnsState] = useState<TableColumn<ComparisonTableData>[]>([]);
   const [buyingColumnsState, setBuyingColumnsState] = useState<TableColumn<YearlyTableData>[]>([]);
@@ -45,59 +46,69 @@ const ComparisonTable = ({ results }: ComparisonTableProps) => {
     }));
   };
 
-  // Define default columns with visibility and importance settings
-  const defaultSummaryColumns: TableColumn<ComparisonTableData>[] = [
-    { key: "year", label: "Year", isVisible: true, isImportant: true },
-    { key: "cumulativeBuyingCosts", label: "Buying Costs", isVisible: !isMobile, isImportant: false },
-    { key: "cumulativeRentingCosts", label: "Renting Costs", isVisible: !isMobile, isImportant: false },
-    { key: "buyingLeftoverInvestmentValue", label: "Buying Investments", isVisible: !isMobile, isImportant: false },
-    { key: "rentingLeftoverInvestmentValue", label: "Renting Investments", isVisible: !isMobile, isImportant: false },
-    { key: "buyingWealth", label: "Buying Wealth", isVisible: true, isImportant: true },
-    { key: "rentingWealth", label: "Renting Wealth", isVisible: true, isImportant: true },
-    { key: "difference", label: "Difference", isVisible: true, isImportant: true },
-    { key: "betterOption", label: "Better Option", isVisible: true, isImportant: true }
-  ];
-
-  const defaultBuyingColumns: TableColumn<YearlyTableData>[] = [
-    { key: "year", label: "Year", isVisible: true, isImportant: true },
-    { key: "yearlyIncome", label: "Annual Income", isVisible: true, isImportant: true },
-    { key: "mortgagePayment", label: "Mortgage Payment", isVisible: true, isImportant: true },
-    { key: "principalPaid", label: "Principal Paid", isVisible: !isMobile, isImportant: false },
-    { key: "interestPaid", label: "Interest Paid", isVisible: !isMobile, isImportant: false },
-    { key: "propertyTaxes", label: "Property Taxes", isVisible: false, isImportant: false },
-    { key: "homeInsurance", label: "Insurance", isVisible: false, isImportant: false },
-    { key: "maintenanceCosts", label: "Maintenance", isVisible: false, isImportant: false },
-    { key: "monthlyExpenses", label: "Monthly Expenses", isVisible: true, isImportant: false },
-    { key: "yearlySavings", label: "Yearly Savings", isVisible: true, isImportant: false },
-    { key: "amountInvested", label: "Amount Invested", isVisible: !isMobile, isImportant: false },
-    { key: "investmentEarnings", label: "Investment Earnings", isVisible: !isMobile, isImportant: false },
-    { key: "investmentsWithEarnings", label: "Investments with Earnings", isVisible: !isMobile, isImportant: false },
-    { key: "loanBalance", label: "Loan Balance", isVisible: !isMobile, isImportant: false },
-    { key: "homeValue", label: "Home Value", isVisible: true, isImportant: true },
-    { key: "homeEquity", label: "Home Equity", isVisible: true, isImportant: true },
-    { key: "capitalGainsTaxPaid", label: "Capital Gains Tax", isVisible: !isMobile, isImportant: false },
-    { key: "totalWealthBuying", label: "Total Wealth", isVisible: true, isImportant: true }
-  ];
-
-  const defaultRentingColumns: TableColumn<YearlyTableData>[] = [
-    { key: "year", label: "Year", isVisible: true, isImportant: true },
-    { key: "yearlyIncome", label: "Annual Income", isVisible: true, isImportant: true },
-    { key: "totalRent", label: "Total Rent", isVisible: true, isImportant: true },
-    { key: "monthlyExpenses", label: "Monthly Expenses", isVisible: true, isImportant: false },
-    { key: "yearlySavings", label: "Yearly Savings", isVisible: true, isImportant: false },
-    { key: "amountInvested", label: "Amount Invested", isVisible: !isMobile, isImportant: false },
-    { key: "investmentEarnings", label: "Investment Earnings", isVisible: !isMobile, isImportant: false },
-    { key: "investmentValueBeforeTax", label: "Investment Value (Before Tax)", isVisible: false, isImportant: false },
-    { key: "capitalGainsTaxPaid", label: "Capital Gains Tax", isVisible: false, isImportant: false },
-    { key: "totalWealthRenting", label: "Total Wealth", isVisible: true, isImportant: true }
-  ];
-
-  // Initialize column states
   useEffect(() => {
-    setSummaryColumnsState(defaultSummaryColumns);
-    setBuyingColumnsState(defaultBuyingColumns);
-    setRentingColumnsState(defaultRentingColumns);
-  }, [isMobile]);
+    const { general } = formData;
+
+    const defaultSummaryColumns: TableColumn<ComparisonTableData>[] = [
+      { key: "year", label: "Year", isVisible: true, isImportant: true },
+      { key: "cumulativeBuyingCosts", label: "Buying Costs", isVisible: !isMobile, isImportant: false },
+      { key: "cumulativeRentingCosts", label: "Renting Costs", isVisible: !isMobile, isImportant: false },
+      { key: "buyingWealth", label: "Buying Wealth", isVisible: true, isImportant: true },
+      { key: "rentingWealth", label: "Renting Wealth", isVisible: true, isImportant: true },
+      { key: "difference", label: "Difference", isVisible: true, isImportant: true },
+      { key: "betterOption", label: "Better Option", isVisible: true, isImportant: true }
+    ];
+
+    const baseBuyingColumns: TableColumn<YearlyTableData>[] = [
+      { key: "year", label: "Year", isVisible: true, isImportant: true },
+      { key: "yearlyIncome", label: "Annual Income", isVisible: true, isImportant: false },
+      { key: "mortgagePayment", label: "Mortgage Payment", isVisible: true, isImportant: true },
+      { key: "principalPaid", label: "Principal Paid", isVisible: !isMobile, isImportant: false },
+      { key: "interestPaid", label: "Interest Paid", isVisible: !isMobile, isImportant: false },
+      { key: "propertyTaxes", label: "Property Taxes", isVisible: false, isImportant: false },
+      { key: "homeInsurance", label: "Insurance", isVisible: false, isImportant: false },
+      { key: "maintenanceCosts", label: "Maintenance", isVisible: false, isImportant: false },
+      { key: "monthlyExpenses", label: "Monthly Expenses", isVisible: true, isImportant: false },
+      { key: "amountInvested", label: "Amount Invested", isVisible: !isMobile, isImportant: false },
+      { key: "investmentEarnings", label: "Investment Earnings", isVisible: !isMobile, isImportant: false },
+      { key: "investmentsWithEarnings", label: "Investments with Earnings", isVisible: !isMobile, isImportant: false },
+      { key: "loanBalance", label: "Loan Balance", isVisible: !isMobile, isImportant: false },
+      { key: "homeValue", label: "Home Value", isVisible: true, isImportant: true },
+      { key: "homeEquity", label: "Home Equity", isVisible: true, isImportant: true },
+      { key: "capitalGainsTaxPaid", label: "Capital Gains Tax", isVisible: !isMobile, isImportant: false },
+      { key: "totalWealthBuying", label: "Total Wealth", isVisible: true, isImportant: true }
+    ];
+
+    const baseRentingColumns: TableColumn<YearlyTableData>[] = [
+      { key: "year", label: "Year", isVisible: true, isImportant: true },
+      { key: "yearlyIncome", label: "Annual Income", isVisible: true, isImportant: false },
+      { key: "totalRent", label: "Total Rent", isVisible: true, isImportant: true },
+      { key: "monthlyExpenses", label: "Monthly Expenses", isVisible: true, isImportant: false },
+      { key: "amountInvested", label: "Amount Invested", isVisible: !isMobile, isImportant: false },
+      { key: "investmentEarnings", label: "Investment Earnings", isVisible: !isMobile, isImportant: false },
+      { key: "investmentsWithEarnings", label: "Investments with Earnings", isVisible: !isMobile, isImportant: false },
+      { key: "capitalGainsTaxPaid", label: "Capital Gains Tax", isVisible: false, isImportant: false },
+      { key: "totalWealthRenting", label: "Total Wealth", isVisible: true, isImportant: true }
+    ];
+
+    // Filter columns based on form inputs
+    const filterIrrelevantColumns = (cols: TableColumn<any>[]) => {
+      return cols.filter(col => {
+        if (col.key === 'yearlyIncome' && (!general.annualIncome || general.annualIncome === 0)) {
+          return false;
+        }
+        if (col.key === 'monthlyExpenses' && (!general.monthlyExpenses || general.monthlyExpenses === 0)) {
+          return false;
+        }
+        return true;
+      });
+    };
+    
+    setSummaryColumnsState(filterIrrelevantColumns(defaultSummaryColumns));
+    setBuyingColumnsState(filterIrrelevantColumns(baseBuyingColumns));
+    setRentingColumnsState(filterIrrelevantColumns(baseRentingColumns));
+
+  }, [isMobile, formData]);
 
   //  Enhance yearly comparisons with better option
   const enhancedYearlyComparisons = yearlyComparisons.map(year => {
