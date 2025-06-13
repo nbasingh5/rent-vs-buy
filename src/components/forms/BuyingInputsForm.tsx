@@ -1,10 +1,7 @@
-
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Card, CardContent } from "../ui/card";
 import { BuyingInputs } from "@/lib/types";
 import CurrencyInput from "./CurrencyInput";
-import SliderInput from "./SliderInput";
 import PercentageInput from "./PercentageInput";
-import { formatCurrency } from "@/lib/calculations";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { Label } from "../ui/label";
 import { FormDescription, FormItem } from "../ui/form";
@@ -72,9 +69,9 @@ const BuyingInputsForm = ({ values, onChange }: BuyingInputsFormProps) => {
             />
           </div>
 
-          <Accordion type="single" collapsible className="mt-6">
-            <AccordionItem value="additional-options">
-              <AccordionTrigger>Additional Options</AccordionTrigger>
+          <Accordion type="multiple" className="w-full mt-6">
+            <AccordionItem value="mortgage-details">
+              <AccordionTrigger>Mortgage Details</AccordionTrigger>
               <AccordionContent>
                 <div className="grid gap-6 pt-4">
                   <PercentageInput
@@ -110,10 +107,17 @@ const BuyingInputsForm = ({ values, onChange }: BuyingInputsFormProps) => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="fixed">Fixed-Rate Mortgage</SelectItem>
-                      <SelectItem value="adjustable">Adjustable-Rate Mortgage</SelectItem>
+                      <SelectItem value="adjustable" disabled>Adjustable-Rate (soon)</SelectItem>
                     </SelectContent>
                   </Select>
-                  
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+            
+            <AccordionItem value="ongoing-costs">
+              <AccordionTrigger>Ongoing Costs</AccordionTrigger>
+              <AccordionContent>
+                <div className="grid gap-6 pt-4">
                   <PercentageInput
                     id="propertyTaxRate"
                     label="Property Tax Rate"
@@ -141,7 +145,7 @@ const BuyingInputsForm = ({ values, onChange }: BuyingInputsFormProps) => {
                       onCheckedChange={handleUsePercentageForMaintenanceChange}
                     />
                     <Label htmlFor="usePercentageForMaintenance">
-                      Use percentage of home value for maintenance costs
+                      Use percentage of home value for maintenance
                     </Label>
                   </div>
                   
@@ -164,7 +168,14 @@ const BuyingInputsForm = ({ values, onChange }: BuyingInputsFormProps) => {
                       description="The estimated annual home maintenance costs"
                     />
                   )}
-                  
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="future-projections">
+              <AccordionTrigger>Future Projections</AccordionTrigger>
+              <AccordionContent>
+                <div className="grid gap-6 pt-4">
                   <div className="space-y-4">
                     <Label>Home Appreciation Rate</Label>
                     <RadioGroup 
@@ -201,7 +212,7 @@ const BuyingInputsForm = ({ values, onChange }: BuyingInputsFormProps) => {
                       value={values.customAppreciationRate}
                       onChange={handleCustomAppreciationRateChange}
                       description="The expected annual home appreciation rate"
-                      min={0}
+                      min={-10}
                       max={20}
                     />
                   )}
